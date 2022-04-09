@@ -15,7 +15,6 @@ const powerbi = new service.Service(factories.hpmFactory, factories.wpmpFactory,
 let accessToken = "";
 let embedUrl = "";
 let reportContainer: HTMLElement;
-// let reportRef: React.Ref<HTMLDivElement>;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface AppProps { };
@@ -43,7 +42,7 @@ class App extends React.Component<AppProps, AppState> {
 					<Button myReport={this.myReport} />
 				</div>
 				{/* ProvenanceGraph only works, when there is a report */}
-				{this.myReport ? <ProvenanceGraph report={this.myReport} /> : null} 
+				{this.myReport ? <ProvenanceGraph report={this.myReport} /> : null}
 			</div>
 		</>)
 			;
@@ -113,7 +112,7 @@ class App extends React.Component<AppProps, AppState> {
 
 			// Clear any other rendered handler events
 			report.off("rendered");
-			
+
 			// Triggers when a content is successfully embedded in UI
 			report.on("rendered", function () {
 				// console.log("Report render successful");
