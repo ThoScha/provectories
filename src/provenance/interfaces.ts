@@ -1,18 +1,18 @@
-export interface IVisState {
-  slicer: boolean;
+export interface IVisDesc {
+  type: string;
   selected: {
     [key: string]: string | number;
   } | null;
 }
 
-export interface IVisDesc {
+export interface IVisState {
   [key: string]: (number | string)[];
 }
 
 export interface IVis {
   [key: string]: {
-    visState: IVisState;
     visDesc: IVisDesc;
+    visState: IVisState;
   };
 }
 
