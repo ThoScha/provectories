@@ -9,6 +9,10 @@ export function ProvenanceGraph({ report }: { report: Report }) {
   const bookmark = React.useRef<string>('');
   const [reportLoaded, setReportLoaded] = React.useState<boolean>(false);
 
+  const toTitle = (title: string): string => {
+    return title.replaceAll(" ", "");
+  }
+
   React.useEffect(() => {// report functions can only be called when the report is loaded
     report.on("loaded", async () => setReportLoaded(true));
     // dashboard rerender doesn't change the report object
@@ -22,14 +26,16 @@ export function ProvenanceGraph({ report }: { report: Report }) {
         const pages = await report.getPages();
         const vis = await pages[1].getVisuals();
         vis.filter((v) => v.type !== 'card' && v.type !== 'shape').forEach(async (v) => {
-          if (!featVecVis || !featVecVis[v.name]) {
-            featVecVis[v.name] = { visDesc: { selected: null, type: v.type }, visState: {} };
+          const title = toTitle(v.title);
+          if (!featVecVis || !featVecVis[title]) {
+            featVecVis[toTitle(title)] = { visDesc: { selected: null, type: v.type }, visState: {} };
           }
         });
       };
 
       const onEvent = (event: any): string => {
         const visualInfo: { name: string, title: string, type: string } = event.detail.visual;
+        const title = toTitle(visualInfo.title);
         const dataPoints: {
           identity: { target: { column: string, table: string }, equals: string }[]
         }[] = event.detail.dataPoints;
@@ -49,8 +55,8 @@ export function ProvenanceGraph({ report }: { report: Report }) {
 
         if (dataPoints.length > 0) {
           dataPoints[0].identity.forEach((i, idx) => {
-            visuals[visualInfo.name].visDesc.selected = {
-              ...visuals[visualInfo.name].visDesc.selected,
+            visuals[title].visDesc.selected = {
+              ...visuals[title].visDesc.selected,
               [i.target.column]: i.equals
             };
             label += `${idx > 0 ? ';' : ''} ${i.target.column}: ${i.equals}`;
@@ -67,8 +73,9 @@ export function ProvenanceGraph({ report }: { report: Report }) {
         const pages = await report.getPages();
         const vis = await pages[1].getVisuals();
         vis.filter((v) => v.type !== 'card' && v.type !== 'shape').forEach(async (v) => {
-          featVecVis[v.name].visState = {};
-          const featVis = featVecVis[v.name].visState;
+          const title = toTitle(v.title);
+          featVecVis[title].visState = {};
+          const featVis = featVecVis[title].visState;
           const result = await exportData(v);
 
           if (!result) {

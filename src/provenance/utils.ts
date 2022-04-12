@@ -35,7 +35,8 @@ export async function exportData(visual: VisualDescriptor): Promise<IExportDataR
 		} catch (err) {
 			tries++;
 			if (tries === 4) {
-				console.error(`exportData [tries]: ${tries}`);
+				console.error('exportData', err);
+				// console.error(`exportData [tries]: ${tries}`);
 			}
 		}
 	}
