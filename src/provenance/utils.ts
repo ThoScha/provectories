@@ -46,3 +46,33 @@ export async function exportData(visual: VisualDescriptor): Promise<IExportDataR
 export function makeDeepCopy<T>(obj: T): T {
 	return typeof obj === 'object' ? JSON.parse(JSON.stringify(obj)) : obj;
 }
+
+export function toTitle(title: string): string {
+	return title.replaceAll(" ", "");
+}
+
+const roleToAttributeMap = {
+	'Y': 'yAxis',
+	'Category': 'xAxis',
+	'Series': 'Legend',
+	'Values': 'Field'
+};
+
+export async function getVisualAttributeMapper(visual: VisualDescriptor): Promise<{ [key: string]: string }> {
+	const mapper: { [key: string]: string } = {};
+
+	const capabilities = await visual.getCapabilities();
+	if (capabilities.dataRoles) {
+		capabilities.dataRoles.forEach(async (role) => {
+			const dataFields = await visual.getDataFields(role.name);
+			if (dataFields.length > 0) {
+				await Promise.all(dataFields.map(async (d, idx) => {
+					const attribute = await visual.getDataFieldDisplayName(role.name, idx);
+					mapper[attribute.replaceAll(" ", "")] = roleToAttributeMap[role.name];
+				}));
+			}
+		})
+	}
+
+	return mapper;
+}

@@ -1,39 +1,29 @@
 import React from "react";
 import { Report } from "report";
 import { setupProvenance } from "./Provenance";
-import { captureBookmark, exportData } from "./utils";
 import { IFeatureVector } from "./interfaces";
+import { captureBookmark, exportData, getVisualAttributeMapper, toTitle } from "./utils";
 
 export function ProvenanceGraph({ report }: { report: Report }) {
   const featureVector = React.useRef<IFeatureVector>({ time: 0, visuals: {} });
   const bookmark = React.useRef<string>('');
-  const [reportLoaded, setReportLoaded] = React.useState<boolean>(false);
-
-  const toTitle = (title: string): string => {
-    return title.replaceAll(" ", "");
-  }
-
-  React.useEffect(() => {// report functions can only be called when the report is loaded
-    report.on("loaded", async () => setReportLoaded(true));
-    // dashboard rerender doesn't change the report object
-  }, [report]);
 
   React.useEffect(() => {
-    if (reportLoaded) {
-
+    const provectories = async () => {
       const initFeatureVector = async () => {
         const featVecVis = featureVector.current.visuals;
         const pages = await report.getPages();
         const vis = await pages[1].getVisuals();
         vis.filter((v) => v.type !== 'card' && v.type !== 'shape').forEach(async (v) => {
+          const columnToAttributeMap = await getVisualAttributeMapper(v);
           const title = toTitle(v.title);
-          if (!featVecVis || !featVecVis[title]) {
-            featVecVis[toTitle(title)] = { visDesc: { selected: null, type: v.type }, visState: {} };
+          if (featVecVis && !featVecVis[title]) {
+            featVecVis[toTitle(title)] = { visDesc: { selected: null, type: v.type, columnToAttributeMap }, visState: {} };
           }
         });
       };
 
-      const onEvent = (event: any): string => {
+      const setVisSelected = (event: any): string => {
         const visualInfo: { name: string, title: string, type: string } = event.detail.visual;
         const title = toTitle(visualInfo.title);
         const dataPoints: {
@@ -68,19 +58,21 @@ export function ProvenanceGraph({ report }: { report: Report }) {
         return label;
       };
 
-      const getVisDesc = async (): Promise<void> => {
+      const setVisDesc = async (): Promise<void> => {
         const featVecVis = featureVector.current.visuals;
         const pages = await report.getPages();
         const vis = await pages[1].getVisuals();
-        vis.filter((v) => v.type !== 'card' && v.type !== 'shape').forEach(async (v) => {
-          const title = toTitle(v.title);
-          featVecVis[title].visState = {};
-          const featVis = featVecVis[title].visState;
+        Promise.all(vis.filter((v) => v.type !== 'card' && v.type !== 'shape').map(async (v) => {
           const result = await exportData(v);
 
           if (!result) {
             return;
           }
+
+          const title = toTitle(v.title);
+          const mapper = featVecVis[title].visDesc.columnToAttributeMap;
+          featVecVis[title].visState = {};
+          const featVis = featVecVis[title].visState;
 
           // vectorize data string
           const data = result.data
@@ -102,63 +94,69 @@ export function ProvenanceGraph({ report }: { report: Report }) {
               if (!d[idx]) {
                 return;
               }
+              if (!featVis[mapper[key]]) {
+                featVis[mapper[key]] = {};
+              }
+              const attribute = featVis[mapper[key]];
               const numbers = d[idx]?.match(/\d+/);
               const val = numbers ? parseInt(numbers[0]) : d[idx];
               if (numbers) {
-                featVis[key] = featVis[key]?.length > 0 ?
+                attribute[key] = attribute[key]?.length > 0 ?
                   [
-                    Math.min(val as number, featVis[key][0] as number),
-                    Math.max(val as number, featVis[key][1] as number)
+                    Math.min(val as number, attribute[key][0] as number),
+                    Math.max(val as number, attribute[key][1] as number)
                   ] :
                   [val, val];
               } else {
-                if (featVis[key]) {
-                  featVis[key].push(val);
+                if (attribute[key]) {
+                  attribute[key].push(val);
                 } else {
-                  featVis[key] = [val];
+                  attribute[key] = [val];
                 }
               }
             });
           });
 
           data[0].forEach((key) => { // remove duplicates
-            if (featVis[key] && typeof featVis[key][0] === 'string') {
-              featVis[key] = Array.from(new Set<string>(featVis[key] as string[]));
+            if (featVis[mapper[key]][key] && typeof featVis[mapper[key]][key][0] === 'string') {
+              featVis[mapper[key]][key] = Array.from(new Set<string>(featVis[mapper[key]][key] as string[]));
             }
           });
-        });
+        }));
       };
+
+      const setBookmark = async () => await captureBookmark(report).then((captured) => bookmark.current = captured?.state || '');
 
       const setCurrTime = () => featureVector.current.time = new Date().getTime();
 
-      const init = async () => {
-        await initFeatureVector();
-        await getVisDesc();
-        await captureBookmark(report).then((captured) => bookmark.current = captured?.state || '');
-        setCurrTime();
-        const actions = setupProvenance(
-          report,
-          { featureVector: featureVector.current, bookmark: bookmark.current },
-          bookmark
-        ).actions;
+      await initFeatureVector();
+      await setVisDesc();
+      await setBookmark();
+      setCurrTime();
 
-        report.on("dataSelected", async (event: any) => {
-          const start = new Date().getTime();
-          await getVisDesc();
-          await captureBookmark(report).then((captured) => bookmark.current = captured?.state || '');
-          const label = onEvent(event);
-          setCurrTime();
-          console.log('Feature Vector', featureVector.current.visuals);
-          // console.log('Data Selected', event.detail);
-          // console.log(capturedBookmark?.state)
-          actions.event({ bookmark: bookmark.current, featureVector: featureVector.current }, label);
-          const end = new Date().getTime();
-          console.log('time:', end - start);
-        });
-      };
-      init();
-    }
-  }, [report, featureVector, reportLoaded]);
+      const actions = setupProvenance(
+        report,
+        { featureVector: featureVector.current, bookmark: bookmark.current },
+        bookmark
+      ).actions;
+
+      report.on("dataSelected", async (event: any) => {
+        await setVisDesc();
+        await setBookmark();
+        const label = setVisSelected(event);
+        setCurrTime();
+        actions.event({ bookmark: bookmark.current, featureVector: featureVector.current }, label);
+        console.log('Feature Vector', featureVector.current.visuals);
+      });
+    };
+
+    // report functions can only be called when the report is loaded
+    report.on('loaded', async () => {
+      await provectories().then(() => report.off('loaded'));
+    });
+
+    // dashboard rerender doesn't change the report object
+  }, [report]);
 
   return <div id="provDiv" style={{ width: 300, marginLeft: 5 }} />;
 }

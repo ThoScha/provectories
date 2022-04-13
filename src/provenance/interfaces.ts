@@ -1,12 +1,16 @@
+
 export interface IVisDesc {
   type: string;
+  columnToAttributeMap: { [key: string]: string };
   selected: {
     [key: string]: string | number;
   } | null;
 }
 
 export interface IVisState {
-  [key: string]: (number | string)[];
+  [key: string]: {
+    [key: string]: (number | string)[];
+  };
 }
 
 export interface IVis {
