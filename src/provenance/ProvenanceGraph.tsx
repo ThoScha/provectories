@@ -87,32 +87,46 @@ export function ProvenanceGraph({ report }: { report: Report }) {
 
           // fill object
           data.forEach((d, idx) => {
-            if (idx === 0) { // skip headers
+            // skip headers
+            if (idx === 0) {
               return;
             }
-            data[0].forEach((key, idx) => { // add values of each row in the right object value
+
+            // add values of each row in the right object value
+            data[0].forEach((key, idx) => {
               if (!d[idx]) {
                 return;
               }
-              if (!featVis[mapper[key]]) {
-                featVis[mapper[key]] = {};
+
+              const mappedKey = mapper[key];
+
+              //intialize attribute if empty
+              if (!featVis[mappedKey]) {
+                featVis[mappedKey] = {};
               }
-              const attribute = featVis[mapper[key]];
+              const attribute = featVis[mappedKey][key];
+
+              //intialize attributeValue if empty
+              if (!attribute[key]) {
+                attribute[key] = []
+              }
+
+              const attributeValues = attribute[key];
+
               const numbers = d[idx]?.match(/\d+/);
               const val = numbers ? parseInt(numbers[0]) : d[idx];
+
               if (numbers) {
-                attribute[key] = attribute[key]?.length > 0 ?
-                  [
-                    Math.min(val as number, attribute[key][0] as number),
-                    Math.max(val as number, attribute[key][1] as number)
-                  ] :
-                  [val, val];
+                attributeValues.push(
+                  attributeValues?.length > 0 ?
+                    [
+                      Math.min(val as number, attributeValues[0] as number),
+                      Math.max(val as number, attributeValues[1] as number)
+                    ] :
+                    [val, val]
+                );
               } else {
-                if (attribute[key]) {
-                  attribute[key].push(val);
-                } else {
-                  attribute[key] = [val];
-                }
+                attributeValues.push(val);
               }
             });
           });
