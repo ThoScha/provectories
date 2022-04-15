@@ -47,7 +47,7 @@ export function makeDeepCopy<T>(obj: T): T {
 	return typeof obj === 'object' ? JSON.parse(JSON.stringify(obj)) : obj;
 }
 
-export function toTitle(title: string): string {
+export function toObjectKey(title: string): string {
 	return title.replaceAll(" ", "");
 }
 
@@ -58,15 +58,15 @@ const roleToAttributeMap = {
 	'Values': 'Field'
 };
 
-export async function getVisualAttributeMapper(visual: VisualDescriptor): Promise<{ [key: string]: string }> {
+export async function getVisualAttributeMapper(visual: any): Promise<{ [key: string]: string }> {
 	const mapper: { [key: string]: string } = {};
 
 	const capabilities = await visual.getCapabilities();
 	if (capabilities.dataRoles) {
-		capabilities.dataRoles.forEach(async (role) => {
+		capabilities.dataRoles.forEach(async (role: any) => {
 			const dataFields = await visual.getDataFields(role.name);
 			if (dataFields.length > 0) {
-				await Promise.all(dataFields.map(async (d, idx) => {
+				await Promise.all(dataFields.map(async (d: any, idx: any) => {
 					const attribute = await visual.getDataFieldDisplayName(role.name, idx);
 					mapper[attribute.replaceAll(" ", "")] = roleToAttributeMap[role.name];
 				}));

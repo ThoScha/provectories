@@ -2,7 +2,7 @@ import React from "react";
 import { Report } from "report";
 import { setupProvenance } from "./Provenance";
 import { IFeatureVector } from "./interfaces";
-import { captureBookmark, exportData, getVisualAttributeMapper, toTitle } from "./utils";
+import { captureBookmark, exportData, getVisualAttributeMapper, toObjectKey } from "./utils";
 
 export function ProvenanceGraph({ report }: { report: Report }) {
   const featureVector = React.useRef<IFeatureVector>({ time: 0, visuals: {} });
@@ -16,16 +16,16 @@ export function ProvenanceGraph({ report }: { report: Report }) {
         const vis = await pages[1].getVisuals();
         vis.filter((v) => v.type !== 'card' && v.type !== 'shape').forEach(async (v) => {
           const columnToAttributeMap = await getVisualAttributeMapper(v);
-          const title = toTitle(v.title);
+          const title = toObjectKey(v.title);
           if (featVecVis && !featVecVis[title]) {
-            featVecVis[toTitle(title)] = { visDesc: { selected: null, type: v.type, columnToAttributeMap }, visState: {} };
+            featVecVis[toObjectKey(title)] = { visDesc: { selected: null, type: v.type, columnToAttributeMap }, visState: {} };
           }
         });
       };
 
       const setVisSelected = (event: any): string => {
         const visualInfo: { name: string, title: string, type: string } = event.detail.visual;
-        const title = toTitle(visualInfo.title);
+        const title = toObjectKey(visualInfo.title);
         const dataPoints: {
           identity: { target: { column: string, table: string }, equals: string }[]
         }[] = event.detail.dataPoints;
@@ -62,14 +62,15 @@ export function ProvenanceGraph({ report }: { report: Report }) {
         const featVecVis = featureVector.current.visuals;
         const pages = await report.getPages();
         const vis = await pages[1].getVisuals();
-        Promise.all(vis.filter((v) => v.type !== 'card' && v.type !== 'shape').map(async (v) => {
+
+        vis.filter((v) => v.type !== 'card' && v.type !== 'shape').forEach(async (v) => {
           const result = await exportData(v);
 
           if (!result) {
             return;
           }
 
-          const title = toTitle(v.title);
+          const title = toObjectKey(v.title);
           const mapper = featVecVis[title].visDesc.columnToAttributeMap;
           featVecVis[title].visState = {};
           const featVis = featVecVis[title].visState;
@@ -82,8 +83,10 @@ export function ProvenanceGraph({ report }: { report: Report }) {
             // remove last row (empty)
             .slice(0, -1);
 
+          // make array per row and push into sets rowwise (sort(), first and last is min-max)
+
           // remove space in headers to get valid object keys
-          data[0] = data[0].map((d) => d.replaceAll(" ", ""));
+          data[0] = data[0].map((d) => toObjectKey(d));
 
           // fill object
           data.forEach((d, idx) => {
@@ -104,39 +107,44 @@ export function ProvenanceGraph({ report }: { report: Report }) {
               if (!featVis[mappedKey]) {
                 featVis[mappedKey] = {};
               }
-              const attribute = featVis[mappedKey][key];
+              const attribute = featVis[mappedKey];
 
               //intialize attributeValue if empty
               if (!attribute[key]) {
                 attribute[key] = []
               }
 
-              const attributeValues = attribute[key];
+              let attributeValues = attribute[key];
 
-              const numbers = d[idx]?.match(/\d+/);
-              const val = numbers ? parseInt(numbers[0]) : d[idx];
+              const number = d[idx]?.match(/\d+/);
+              const val = number ? parseInt(number[0]) : d[idx];
 
-              if (numbers) {
-                attributeValues.push(
-                  attributeValues?.length > 0 ?
-                    [
-                      Math.min(val as number, attributeValues[0] as number),
-                      Math.max(val as number, attributeValues[1] as number)
-                    ] :
-                    [val, val]
-                );
+              if (number) {
+                if (attributeValues?.length > 0) {
+                  attribute[key] = [
+                    Math.min(val as number, attributeValues[0] as number),
+                    Math.max(val as number, attributeValues[1] as number)
+                  ];
+                } else {
+                  attribute[key] = [val, val];
+                }
               } else {
                 attributeValues.push(val);
               }
             });
           });
 
-          data[0].forEach((key) => { // remove duplicates
-            if (featVis[mapper[key]][key] && typeof featVis[mapper[key]][key][0] === 'string') {
-              featVis[mapper[key]][key] = Array.from(new Set<string>(featVis[mapper[key]][key] as string[]));
-            }
+          // removes duplicates from string[]
+          Object.keys(featVis).forEach((key) => {
+            const attribute = featVis[key];
+            Object.keys(attribute).forEach((k) => {
+              const values = attribute[k];
+              if (typeof values[0] === 'string') {
+                attribute[k] = Array.from(new Set<string>(values as string[]));
+              }
+            });
           });
-        }));
+        });
       };
 
       const setBookmark = async () => await captureBookmark(report).then((captured) => bookmark.current = captured?.state || '');
