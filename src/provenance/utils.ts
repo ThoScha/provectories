@@ -58,15 +58,15 @@ const roleToAttributeMap = {
 	'Values': 'Field'
 };
 
-export async function getVisualAttributeMapper(visual: any): Promise<{ [key: string]: string }> {
+export async function getVisualAttributeMapper(visual: VisualDescriptor): Promise<{ [key: string]: string }> {
 	const mapper: { [key: string]: string } = {};
 
 	const capabilities = await visual.getCapabilities();
 	if (capabilities.dataRoles) {
-		capabilities.dataRoles.forEach(async (role: any) => {
+		capabilities.dataRoles.forEach(async (role) => {
 			const dataFields = await visual.getDataFields(role.name);
 			if (dataFields.length > 0) {
-				await Promise.all(dataFields.map(async (d: any, idx: any) => {
+				await Promise.all(dataFields.map(async (d, idx) => {
 					const attribute = await visual.getDataFieldDisplayName(role.name, idx);
 					mapper[attribute.replaceAll(" ", "")] = roleToAttributeMap[role.name];
 				}));
@@ -75,4 +75,11 @@ export async function getVisualAttributeMapper(visual: any): Promise<{ [key: str
 	}
 
 	return mapper;
+}
+
+export async function getCurrentVisuals(report: Report): Promise<VisualDescriptor[]> {
+	return report
+		.getPages().then((pages) => pages[1]
+			.getVisuals().then((visuals) => visuals
+				.filter((v) => v.type !== 'card' && v.type !== 'shape')));
 }
