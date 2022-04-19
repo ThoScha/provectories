@@ -23,38 +23,28 @@ export function ProvenanceGraph({ report }: { report: Report }) {
       };
 
       const setVisSelected = (event: any): string => {
-        const visualInfo: { name: string, title: string, type: string } = event.detail.visual;
-        const title = toObjectKey(visualInfo.title);
-        const dataPoints: {
-          identity: { target: { column: string, table: string }, equals: string }[]
-        }[] = event.detail.dataPoints;
+        const { dataPoints } = event.detail;
+        const { type, title } = event.detail.visual;
         const { visuals } = featureVector.current;
-        let label = '';
+        let label = title + ' - ';
 
-        if (visualInfo.type !== 'slicer') {
+        // clears non slicer values when non slicer selection
+        if (type !== 'slicer') {
           Object.keys(visuals).forEach((key) => {
-            if (visuals[key].visDesc.type !== 'slicer') {
-              visuals[key].visDesc.selected = null;
-            }
+            const { visDesc } = visuals[key];
+            visDesc.selected = visDesc.type !== 'slicer' ? null : visDesc.selected;
           });
-          label += 'Vis -';
-        } else {
-          label += 'Box -';
         }
-
+        // asign selected values
         if (dataPoints.length > 0) {
-          dataPoints[0].identity.forEach((i, idx) => {
-            visuals[title].visDesc.selected = {
-              ...visuals[title].visDesc.selected,
-              [i.target.column]: i.equals
-            };
-            label += `${idx > 0 ? ';' : ''} ${i.target.column}: ${i.equals}`;
+          const { visDesc } = visuals[toObjectKey(title)];
+          dataPoints[0].identity.forEach((i: any, idx: number) => {
+            visDesc.selected = { ...visDesc.selected, [i.target.column]: i.equals };
+            label += `${idx > 0 ? '; ' : ''}${i.target.column}: ${i.equals}`;
           });
-        } else {
-          label += ' deselected';
+          return label;
         }
-
-        return label;
+        return label + 'deselected';
       };
 
       const setVisDesc = async (): Promise<void> => {
@@ -66,7 +56,6 @@ export function ProvenanceGraph({ report }: { report: Report }) {
           if (!result) {
             return;
           }
-
           // vectorize data string && remove last row (empty)
           const data = result.data.replaceAll("\n", "").split('\r').map((d) => d.split(',')).slice(0, -1);
           const groupedData: { [key: string]: Set<any> } = {};
@@ -74,7 +63,7 @@ export function ProvenanceGraph({ report }: { report: Report }) {
           // group data columnwise
           data[0].forEach((header, index) => {
             const key = toObjectKey(header);
-            groupedData[key] = new Set<any>();
+            groupedData[key] = new Set();
             const currSet = groupedData[key];
 
             data.forEach((row, idx) => {
