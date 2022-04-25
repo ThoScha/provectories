@@ -13,7 +13,7 @@ export async function captureBookmark(report: Report): Promise<IReportBookmark |
 	return undefined;
 }
 
-export async function applyBookmark(bookmark: string, report: Report, skip?: () => boolean): Promise<void> {
+export async function applyBookmark(bookmark: string, report: Report): Promise<void> {
 	try {
 		await report.bookmarksManager.applyState(bookmark);
 	}

@@ -20,15 +20,15 @@ export interface IVis {
   };
 }
 
-export interface IFeatureVector {
+export type IFeatureVector = [string[], [number[] | number]];
+
+export interface IAppState {
   time: number;
   visuals: IVis;
 }
 
-export interface IApplicationState {
-  featureVector: IFeatureVector;
+export interface IProvectories {
+  featureVector?: IFeatureVector;
+  appState: IAppState;
   bookmark: string;
 }
-
-
-

@@ -1,11 +1,11 @@
 import React from "react";
 import { Report } from "report";
 import { setupProvenance } from "./Provenance";
-import { IFeatureVector } from "./interfaces";
+import { IAppState } from "./interfaces";
 import { captureBookmark, exportData, getVisualAttributeMapper, toObjectKey, getCurrentVisuals } from "./utils";
 
 export function ProvenanceGraph({ report }: { report: Report }) {
-  const featureVector = React.useRef<IFeatureVector>({ time: 0, visuals: {} });
+  const featureVector = React.useRef<IAppState>({ time: 0, visuals: {} });
   const bookmark = React.useRef<string>('');
 
   React.useEffect(() => {
@@ -106,7 +106,7 @@ export function ProvenanceGraph({ report }: { report: Report }) {
 
       const actions = setupProvenance(
         report,
-        { featureVector: featureVector.current, bookmark: bookmark.current },
+        { appState: featureVector.current, bookmark: bookmark.current },
         bookmark
       ).actions;
 
@@ -115,7 +115,7 @@ export function ProvenanceGraph({ report }: { report: Report }) {
         await setBookmark();
         const label = setVisSelected(event);
         setCurrTime();
-        actions.event({ bookmark: bookmark.current, featureVector: featureVector.current }, label);
+        actions.event({ bookmark: bookmark.current, appState: featureVector.current }, label);
         console.log('Feature Vector', featureVector.current.visuals);
       });
     };
