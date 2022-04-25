@@ -1,12 +1,64 @@
 import React from "react";
 import { Report } from "report";
+import 'powerbi-report-authoring';
 import { setupProvenance } from "./Provenance";
 import { IFeatureVector } from "./interfaces";
 import { captureBookmark, exportData, getVisualAttributeMapper, toObjectKey, getCurrentVisuals } from "./utils";
+import { models } from "powerbi-client";
 
 export function ProvenanceGraph({ report }: { report: Report }) {
   const featureVector = React.useRef<IFeatureVector>({ time: 0, visuals: {} });
-  const bookmark = React.useRef<string>('');
+  const bookmark = React.useRef<string>('')
+  const [action, setAction] = React.useState<any>();
+
+  const setVisDesc = async (): Promise<void> => {
+    const featVecVis = featureVector.current.visuals;
+    const visuals = await getCurrentVisuals(report);
+    visuals.forEach(async (v) => {
+      const result = await exportData(v);
+
+      if (!result) {
+        return;
+      }
+      // vectorize data string && remove last row (empty)
+      const data = result.data.replaceAll("\n", "").split('\r').map((d) => d.split(',')).slice(0, -1);
+      const groupedData: { [key: string]: Set<any> } = {};
+
+      // group data columnwise
+      data[0].forEach((header, index) => {
+        const key = toObjectKey(header);
+        groupedData[key] = new Set();
+        const currSet = groupedData[key];
+
+        data.forEach((row, idx) => {
+          // skip headers and empty values
+          if (idx === 0 || !row[index]) {
+            return;
+          }
+          const cell = row[index];
+          const number = cell.match(/\d+/);
+          const value = number ? parseInt(number[0]) : cell;
+          currSet.add(value);
+        });
+      });
+
+      const currVis = featVecVis[toObjectKey(v.title)];
+      currVis.visState = {};
+      const featVis = currVis.visState;
+
+      // assign to feature vector in right format
+      Object.keys(groupedData).forEach((key) => {
+        const currArr: (string | number)[] = Array.from(groupedData[key]);
+        const attribute = currVis.visDesc.columnToAttributeMap[key];
+
+        if (!featVis[attribute]) {
+          featVis[attribute] = {}
+        }
+        featVis[attribute][key] = typeof currArr[0] === 'number' ?
+          [Math.min(...(currArr as number[])), Math.max(...(currArr as number[]))] : currArr;
+      });
+    });
+  };
 
   React.useEffect(() => {
     const provectories = async () => {
@@ -14,6 +66,8 @@ export function ProvenanceGraph({ report }: { report: Report }) {
         const featVecVis = featureVector.current.visuals;
         const visuals = await getCurrentVisuals(report);
         visuals.forEach(async (v) => {
+          console.log(v.type)
+          console.log(v.title)
           const columnToAttributeMap = await getVisualAttributeMapper(v);
           const title = toObjectKey(v.title);
           if (featVecVis && !featVecVis[title]) {
@@ -110,12 +164,14 @@ export function ProvenanceGraph({ report }: { report: Report }) {
         bookmark
       ).actions;
 
+      setAction(actions);
+
       report.on("dataSelected", async (event: any) => {
-        await setVisDesc();
+        // await setVisDesc();
         await setBookmark();
         const label = setVisSelected(event);
         setCurrTime();
-        actions.event({ bookmark: bookmark.current, featureVector: featureVector.current }, label);
+        // actions.event({ bookmark: bookmark.current, featureVector: featureVector.current }, label);
         console.log('Feature Vector', featureVector.current.visuals);
       });
     };
@@ -128,5 +184,19 @@ export function ProvenanceGraph({ report }: { report: Report }) {
     // dashboard rerender doesn't change the report object
   }, [report]);
 
-  return <div id="provDiv" style={{ width: 300, marginLeft: 5 }} />;
+  return <>
+    <div id="provDiv" style={{ width: 300, marginLeft: 5 }} />
+    <button onClick={async () => {
+      const p = await report.getPages();
+      const v = await p[1].getVisuals();
+      v.forEach(async (a) => {
+        if (a.type === 'clusteredBarChart') {
+          console.log(await a.exportData(models.ExportDataType.Summarized))
+        }
+      })
+
+      // setVisDesc();
+      // action.event({ bookmark: bookmark.current, featureVector: featureVector.current }, "");
+    }}>Click me</button>
+  </>;
 }
