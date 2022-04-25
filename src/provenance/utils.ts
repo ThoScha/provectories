@@ -1,6 +1,7 @@
 import { Report } from "report";
 import { IReportBookmark, IExportDataResult } from "powerbi-models";
 import { models, VisualDescriptor } from "powerbi-client";
+import 'powerbi-report-authoring';
 
 export async function captureBookmark(report: Report): Promise<IReportBookmark | undefined> {
 	try {
@@ -60,26 +61,26 @@ const roleToAttributeMap = {
 
 export async function getVisualAttributeMapper(visual: VisualDescriptor): Promise<{ [key: string]: string }> {
 	const mapper: { [key: string]: string } = {};
-
-	const capabilities = await visual.getCapabilities();
-	if (capabilities.dataRoles) {
-		capabilities.dataRoles.forEach(async (role) => {
-			const dataFields = await visual.getDataFields(role.name);
-			if (dataFields.length > 0) {
-				await Promise.all(dataFields.map(async (d, idx) => {
-					const attribute = await visual.getDataFieldDisplayName(role.name, idx);
-					mapper[attribute.replaceAll(" ", "")] = roleToAttributeMap[role.name];
-				}));
-			}
-		})
+	if (visual.getCapabilities) {
+		const capabilities = await visual.getCapabilities();
+		if (capabilities.dataRoles) {
+			capabilities.dataRoles.forEach(async (role) => {
+				const dataFields = await visual.getDataFields(role.name);
+				if (dataFields.length > 0) {
+					await Promise.all(dataFields.map(async (d, idx) => {
+						const attribute = await visual.getDataFieldDisplayName(role.name, idx);
+						mapper[attribute.replaceAll(" ", "")] = roleToAttributeMap[role.name];
+					}));
+				}
+			})
+		}
 	}
-
 	return mapper;
 }
 
 export async function getCurrentVisuals(report: Report): Promise<VisualDescriptor[]> {
 	return report
-		.getPages().then((pages) => pages[1]
+		.getPages().then(async (pages) => pages[1]
 			.getVisuals().then((visuals) => visuals
 				.filter((v) => v.type !== 'card' && v.type !== 'shape')));
 }

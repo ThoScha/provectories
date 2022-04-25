@@ -9,7 +9,6 @@ import { service, factories, models, IEmbedConfiguration, Report } from "powerbi
 import "./App.css";
 import * as config from "./Config";
 import { ProvenanceGraph } from "./provenance/ProvenanceGraph";
-import Button from "./Button";
 const powerbi = new service.Service(factories.hpmFactory, factories.wpmpFactory, factories.routerFactory);
 
 let accessToken = "";
@@ -35,12 +34,11 @@ class App extends React.Component<AppProps, AppState> {
 
 		return (<>
 			<div style={{ display: 'flex' }}>
-				<div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+				<div style={{ display: 'flex', flex: 1 }}>
 					<div id="reportContainer" ref={this.state.reportRef} style={{ display: 'flex', flexDirection: 'column', flex: 1 }} >
 						Loading the report...
 					</div>
 				</div>
-				<Button myReport={this.myReport} />
 				{/* ProvenanceGraph only works, when there is a report */}
 				{this.myReport ? <ProvenanceGraph report={this.myReport} /> : null}
 			</div>
