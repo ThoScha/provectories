@@ -14,53 +14,45 @@ interface IAppProvenance {
   actions: IAction;
 }
 
-export function setupProvenance(report: Report, defaultState: IProvectories, bookmark: React.MutableRefObject<string>): IAppProvenance {
+export function setupProvenance(report: Report, defaultState: IProvectories, bookmarkRef: React.MutableRefObject<string>): IAppProvenance {
+  const rootState = defaultState.appState;
   const provenance: Provenance<IProvectories, string, unknown> = initProvenance<IProvectories, string, unknown>(defaultState);
 
   provenance.addGlobalObserver(() => {
     const currentNode = provenance.getState(provenance.current);
-    if (bookmark.current !== currentNode.bookmark) {
+    if (bookmarkRef.current !== currentNode.bookmark) {
       applyBookmark(provenance.getState(provenance.current).bookmark, report);
-      bookmark.current = '';
+      bookmarkRef.current = '';
     }
   });
 
   provenance.done();
 
-  const appStateToFeatureVector = (appState: IAppState, nodeState: IAppState): IFeatureVector => {
-    const featureVector: IFeatureVector = [['time'], [appState.time]];
-    console.log("appState", appState.visuals)
-    console.log("nodeState", nodeState.visuals);
-    const visuals = appState.visuals;
-    Object.keys(visuals).forEach((vKey) => {
-      const visual = visuals[vKey];
-      const selected = visual.visDesc.selected;
-      const state = visuals[vKey].visState;
-      Object.keys(state).forEach((sKey) => {
-        const attribute = state[sKey];
-        Object.keys(attribute).forEach((aKey) => {
-          const test = attribute[aKey];
-          featureVector[0].push(vKey + aKey);
-          if (typeof test[0] === 'number') {
-            featureVector[1].push(test as number[]);
-          } else {
-            const newStuff = [];
-            console.log(nodeState.visuals[vKey])
-            console.log(vKey, aKey, sKey)
-            nodeState.visuals[vKey].visState[sKey][aKey].forEach((prev: string | number) => {
-              newStuff.push(test.includes(prev) ? 0 : 1) // if filtered then 1 (included = !filtered)
-              newStuff.push(selected && selected[aKey] === prev ? 1 : 0) // if selected 1
-            });
-          }
-        });
+  const appStateToFeatureVector = (currState: IAppState): IFeatureVector => {
+    const featureVector: IFeatureVector = { time: currState.time };
+    const rootVisuals = rootState.visuals
+
+    Object.keys(rootVisuals).forEach((vKey) => {
+      const { visState, selected, type } = currState.visuals[vKey];
+      const rootVisState = rootVisuals[vKey].visState;
+      Object.keys(rootVisState).forEach((aKey) => {
+        const rootAttribute = rootVisState[aKey];
+        const currAttribute = visState[aKey];
+        featureVector[vKey + aKey] = typeof rootAttribute[0] === 'number' ? (
+          currAttribute as number[] || [0, 0]
+        ) : (
+            rootAttribute.map((root) => [
+              currAttribute.includes(root) ? 0 : 1, // if filtered then 1 (included = !filtered)
+              selected && selected[aKey] === root ? 1 : 0 // if selected 1
+            ])
+          );
       });
     });
-
     return featureVector;
   }
 
   const event = (newState: IProvectories, label: string) => {
-    console.log(appStateToFeatureVector(newState.appState, provenance.getState(provenance.root).appState));
+    console.log(appStateToFeatureVector(newState.appState));
 
     provenance.apply({
       apply: (state: IProvectories) => ({

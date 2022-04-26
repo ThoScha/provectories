@@ -2,22 +2,21 @@ import React from "react";
 import { Report } from "report";
 import { setupProvenance } from "./Provenance";
 import { IAppState } from "./interfaces";
-import { captureBookmark, exportData, getVisualAttributeMapper, toObjectKey, getCurrentVisuals } from "./utils";
+import { captureBookmark, exportData, toObjectKey, getCurrentVisuals } from "./utils";
 
 export function ProvenanceGraph({ report }: { report: Report }) {
-  const featureVector = React.useRef<IAppState>({ time: 0, visuals: {} });
+  const appState = React.useRef<IAppState>({ time: 0, visuals: {} });
   const bookmark = React.useRef<string>('');
 
   React.useEffect(() => {
     const provectories = async () => {
       const initFeatureVector = async () => {
-        const featVecVis = featureVector.current.visuals;
+        const featVecVis = appState.current.visuals;
         const visuals = await getCurrentVisuals(report);
-        visuals.forEach(async (v) => {
-          const columnToAttributeMap = await getVisualAttributeMapper(v);
+        visuals.forEach((v) => {
           const title = toObjectKey(v.title);
           if (featVecVis && !featVecVis[title]) {
-            featVecVis[toObjectKey(title)] = { visDesc: { selected: null, type: v.type, columnToAttributeMap }, visState: {} };
+            featVecVis[toObjectKey(title)] = { selected: null, type: v.type, visState: {} };
           }
         });
       };
@@ -25,19 +24,19 @@ export function ProvenanceGraph({ report }: { report: Report }) {
       const setVisSelected = (event: any): string => {
         const { dataPoints } = event.detail;
         const { type, title } = event.detail.visual;
-        const { visuals } = featureVector.current;
+        const { visuals } = appState.current;
         let label = title + ' - ';
 
         // clears non slicer values when non slicer selection
         if (type !== 'slicer') {
           Object.keys(visuals).forEach((key) => {
-            const { visDesc } = visuals[key];
+            const visDesc = visuals[key];
             visDesc.selected = visDesc.type !== 'slicer' ? null : visDesc.selected;
           });
         }
         // asign selected values
         if (dataPoints.length > 0) {
-          const { visDesc } = visuals[toObjectKey(title)];
+          const visDesc = visuals[toObjectKey(title)];
           dataPoints[0].identity.forEach((i: any, idx: number) => {
             visDesc.selected = { ...visDesc.selected, [i.target.column]: i.equals };
             label += `${idx > 0 ? '; ' : ''}${i.target.column}: ${i.equals}`;
@@ -48,7 +47,6 @@ export function ProvenanceGraph({ report }: { report: Report }) {
       };
 
       const setVisDesc = async (): Promise<void> => {
-        const featVecVis = featureVector.current.visuals;
         const visuals = await getCurrentVisuals(report);
         visuals.forEach(async (v) => {
           const result = await exportData(v);
@@ -78,26 +76,19 @@ export function ProvenanceGraph({ report }: { report: Report }) {
             });
           });
 
-          const currVis = featVecVis[toObjectKey(v.title)];
-          currVis.visState = {};
-          const featVis = currVis.visState;
-
-          // assign to feature vector in right format
+          const appStateVis = appState.current.visuals;
+          const { visState } = appStateVis[toObjectKey(v.title)];
+          // assign to visual state in right format
           Object.keys(groupedData).forEach((key) => {
             const currArr: (string | number)[] = Array.from(groupedData[key]);
-            const attribute = currVis.visDesc.columnToAttributeMap[key];
-
-            if (!featVis[attribute]) {
-              featVis[attribute] = {}
-            }
-            featVis[attribute][key] = typeof currArr[0] === 'number' ?
+            visState[key] = typeof currArr[0] === 'number' ?
               [Math.min(...(currArr as number[])), Math.max(...(currArr as number[]))] : currArr;
           });
         });
       };
 
       const setBookmark = async () => await captureBookmark(report).then((captured) => bookmark.current = captured?.state || '');
-      const setCurrTime = () => featureVector.current.time = new Date().getTime();
+      const setCurrTime = () => appState.current.time = new Date().getTime();
 
       await initFeatureVector();
       await setVisDesc();
@@ -106,7 +97,7 @@ export function ProvenanceGraph({ report }: { report: Report }) {
 
       const actions = setupProvenance(
         report,
-        { appState: featureVector.current, bookmark: bookmark.current },
+        { appState: appState.current, bookmark: bookmark.current },
         bookmark
       ).actions;
 
@@ -115,8 +106,8 @@ export function ProvenanceGraph({ report }: { report: Report }) {
         await setBookmark();
         const label = setVisSelected(event);
         setCurrTime();
-        actions.event({ bookmark: bookmark.current, appState: featureVector.current }, label);
-        console.log('Feature Vector', featureVector.current.visuals);
+        actions.event({ bookmark: bookmark.current, appState: appState.current }, label);
+        // console.log('appStateVis', appState.current.visuals);
       });
     };
 
