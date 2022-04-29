@@ -2,7 +2,7 @@ export interface IVisState {
   [key: string]: (number | string)[];
 }
 
-export interface IVis {
+export interface IAppState {
   [key: string]: {
     type: string;
     selected: {
@@ -12,17 +12,11 @@ export interface IVis {
   };
 }
 
-export interface IAppState {
-  time: number;
-  visuals: IVis;
-}
-
 export type IFeatureVector = {
-  [key: string]: number | number[] | number[][];
+  [key: string]: number[][];
 }
 
 export interface IProvectories {
-  featureVector?: IFeatureVector;
   appState: IAppState;
   bookmark: string;
 }

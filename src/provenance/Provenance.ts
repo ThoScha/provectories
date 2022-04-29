@@ -1,22 +1,26 @@
 import { Provenance, NodeID, initProvenance } from '@visdesignlab/trrack';
 import { ProvVisCreator } from '@visdesignlab/trrack-vis';
 import { Report } from 'powerbi-client';
-import { IProvectories, IFeatureVector, IAppState } from './interfaces';
+import { IProvectories } from './interfaces';
 import { applyBookmark } from './utils';
 import { ActionReturnType } from '@visdesignlab/trrack/dist/Types/Action';
 
 export interface IAction {
-  event: (newState: IProvectories, label: string) => void;
+  event: (onDashboardClick: () => Promise<{ newState: IProvectories, label: string }>) => void;
 }
 
 interface IAppProvenance {
-  provenance: Provenance<IProvectories, string, unknown>;
+  provenance: Provenance<IProvectories, string, void>;
   actions: IAction;
 }
-
+/**
+ * Initializes trrack and trrack-vis provenance
+ * @param report Current report to apply bookmarks on
+ * @param defaultState Initial state of the dashboard
+ * @param bookmarkRef Current bookmarkRef to get the update bookmark for performance improvements
+ */
 export function setupProvenance(report: Report, defaultState: IProvectories, bookmarkRef: React.MutableRefObject<string>): IAppProvenance {
-  const rootState = defaultState.appState;
-  const provenance: Provenance<IProvectories, string, unknown> = initProvenance<IProvectories, string, unknown>(defaultState);
+  const provenance = initProvenance<IProvectories, string, void>(defaultState as IProvectories);
 
   provenance.addGlobalObserver(() => {
     const currentNode = provenance.getState(provenance.current);
@@ -28,43 +32,19 @@ export function setupProvenance(report: Report, defaultState: IProvectories, boo
 
   provenance.done();
 
-  const appStateToFeatureVector = (currState: IAppState): IFeatureVector => {
-    const featureVector: IFeatureVector = { time: currState.time };
-    const rootVisuals = rootState.visuals
-
-    Object.keys(rootVisuals).forEach((vKey) => {
-      const { visState, selected, type } = currState.visuals[vKey];
-      const rootVisState = rootVisuals[vKey].visState;
-      Object.keys(rootVisState).forEach((aKey) => {
-        const rootAttribute = rootVisState[aKey];
-        const currAttribute = visState[aKey];
-        featureVector[vKey + aKey] = typeof rootAttribute[0] === 'number' ? (
-          currAttribute as number[] || [0, 0]
-        ) : (
-            rootAttribute.map((root) => [
-              currAttribute.includes(root) ? 0 : 1, // if filtered then 1 (included = !filtered)
-              selected && selected[aKey] === root ? 1 : 0 // if selected 1
-            ])
-          );
-      });
-    });
-    return featureVector;
-  }
-
-  const event = (newState: IProvectories, label: string) => {
-    console.log(appStateToFeatureVector(newState.appState));
-
+  const event = async (onDashboardClick: () => Promise<{ newState: IProvectories, label: string }>) => {
+    const { newState, label } = await onDashboardClick();
     provenance.apply({
       apply: (state: IProvectories) => ({
-        state: newState,
+        state: newState as IProvectories,
         label,
         stateSaveMode: 'Complete',
         actionType: 'Regular',
-        eventType: '', // TODO: changes here because graph = string
+        eventType: '',
         meta: {}
       } as ActionReturnType<IProvectories, string>)
     }, label);
-  }
+  };
 
   const provVisUpdate = () => {
     const provDiv = document.getElementById("provDiv");
@@ -75,7 +55,7 @@ export function setupProvenance(report: Report, defaultState: IProvectories, boo
         (id: NodeID) => provenance.goToNode(id),
         true, false, undefined, { height: 500, width: 150, textSize: 12, verticalSpace: 25 });
     }
-  }
+  };
 
   provVisUpdate();
 
