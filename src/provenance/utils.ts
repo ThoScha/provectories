@@ -158,36 +158,62 @@ function appStateToFeatureVector(currState: IAppState, rootState: IAppState): IF
 		});
 	});
 	return featureVector;
-};
+}
 
 /**
- * TODO: make in to two functions, make time better
- * @param provenance 
+ * Goes through graph, returns feature vector row for each node and returns feature vector matrix
+ * @param provenance Provenance object to featurize
  */
-export function downloadGraphAsFeatVecCsv(provenance: Provenance<IProvectories, string, void>): void {
-	let vectorString = 'data:text/csv;charset=utf-8,';
+export function featureVectorizeGraph(provenance: Provenance<IProvectories, string, void>): (string[] | number[][][])[] {
 	const { root, graph } = provenance;
 	const featureVectors: (string[] | number[][][])[] = [];
 
 	Object.keys(graph.nodes).forEach((key) => {
 		const currNode = graph.nodes[key];
-		const currVector = appStateToFeatureVector(provenance.getState(currNode.id).appState, provenance.getState(root.id).appState);
-		const newRow: number[][][] = [[[currNode.metadata.createdOn || -1]]];
+		const currVector = appStateToFeatureVector(
+			provenance.getState(currNode.id).appState, provenance.getState(root.id).appState
+		);
 		// adding header row
 		if (key === root.id) {
-			featureVectors.push(Object.keys(currVector));
-			vectorString += featureVectors[0].join(';') + '\r\n';
+			featureVectors.push(['time', ...Object.keys(currVector)]);
 		}
-
-		vectorString += currNode.metadata.createdOn || -1 + ';';
-		(featureVectors[0] as string[]).forEach((title: string, idx: number) => {
-			newRow.push(currVector[title]);
-			vectorString += JSON.stringify(currVector[title]).slice(1, -1);
-			vectorString += idx < featureVectors[0].length - 1 ? ';' : '\r\n'
-		});
+		const newRow: number[][][] = [[[currNode.metadata.createdOn || -1]]];
+		// skip first column since time is no key in feature vector
+		newRow.push(...(featureVectors[0] as string[]).slice(1).map((title: string) => currVector[title]));
 		featureVectors.push(newRow);
 	});
+	console.log(featureVectors);
+	return featureVectors;
+}
 
-	const encodedUri = encodeURI(vectorString);
-	window.open(encodedUri);
-};
+/**
+ * Takes feature vector matrix and converts it to a csv-string
+ * @param featureVectors Feature vector matrix
+ */
+export function featureVectorsToCsvString(featureVectors: (string[] | number[][][])[]): string {
+	let vectorString = 'data:text/csv;charset=utf-8,';
+	featureVectors.forEach((row, idx) => {
+		if (idx === 0) {
+			vectorString += row.join(';') + '\r\n';
+		} else {
+			(row as number[][][]).forEach((cell, i) => {
+				let newString = JSON.stringify(cell).slice(1, -1);
+				// removes brackets for single value vector
+				if (cell[0].length === 1) {
+					newString = newString.replaceAll('[', '').replaceAll(']', '');
+				}
+				vectorString += newString;
+				vectorString += i < row.length - 1 ? ';' : '\r\n'
+			});
+		}
+	});
+	return vectorString;
+}
+
+/**
+ * Returns csv file representing feature vectors of a provenance graph
+ * @param provenance Provenance object to convert to csv
+ */
+export function downloadGraphAsFeatVecCsv(provenance: Provenance<IProvectories, string, void>): void {
+	window.open(encodeURI(featureVectorsToCsvString(featureVectorizeGraph(provenance))));
+}
