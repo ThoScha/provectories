@@ -1,44 +1,50 @@
 import { Provenance, NodeID, initProvenance } from '@visdesignlab/trrack';
 import { ProvVisCreator } from '@visdesignlab/trrack-vis';
 import { Report } from 'powerbi-client';
-import { IApplicationState } from './interfaces';
+import { IProvectories } from './interfaces';
 import { applyBookmark } from './utils';
 import { ActionReturnType } from '@visdesignlab/trrack/dist/Types/Action';
 
 export interface IAction {
-  event: (newState: IApplicationState, label: string) => void;
+  event: (onDashboardClick: () => Promise<{ newState: IProvectories, label: string }>) => void;
 }
 
 interface IAppProvenance {
-  provenance: Provenance<IApplicationState, string, unknown>;
+  provenance: Provenance<IProvectories, string, void>;
   actions: IAction;
 }
-
-export function setupProvenance(report: Report, defaultState: IApplicationState, bookmark: React.MutableRefObject<string>): IAppProvenance {
-  const provenance: Provenance<IApplicationState, string, unknown> = initProvenance<IApplicationState, string, unknown>(defaultState);
+/**
+ * Initializes trrack and trrack-vis provenance
+ * @param report Current report to apply bookmarks on
+ * @param defaultState Initial state of the dashboard
+ * @param bookmarkRef Current bookmarkRef to get the update bookmark for performance improvements
+ */
+export function setupProvenance(report: Report, defaultState: IProvectories, bookmarkRef: React.MutableRefObject<string>): IAppProvenance {
+  const provenance = initProvenance<IProvectories, string, void>(defaultState as IProvectories);
 
   provenance.addGlobalObserver(() => {
     const currentNode = provenance.getState(provenance.current);
-    if (bookmark.current !== currentNode.bookmark) {
-      applyBookmark(provenance.getState(provenance.current).bookmark, report, () => true);
-      bookmark.current = '';
+    if (bookmarkRef.current !== currentNode.bookmark) {
+      applyBookmark(provenance.getState(provenance.current).bookmark, report);
+      bookmarkRef.current = '';
     }
   });
 
   provenance.done();
 
-  const event = (newState: IApplicationState, label: string) => {
+  const event = async (onDashboardClick: () => Promise<{ newState: IProvectories, label: string }>) => {
+    const { newState, label } = await onDashboardClick();
     provenance.apply({
-      apply: (state: IApplicationState) => ({
-        state: newState,
+      apply: (state: IProvectories) => ({
+        state: newState as IProvectories,
         label,
         stateSaveMode: 'Complete',
         actionType: 'Regular',
-        eventType: '', // TODO: changes here because graph = string
+        eventType: '',
         meta: {}
-      } as ActionReturnType<IApplicationState, string>)
+      } as ActionReturnType<IProvectories, string>)
     }, label);
-  }
+  };
 
   const provVisUpdate = () => {
     const provDiv = document.getElementById("provDiv");
@@ -49,7 +55,7 @@ export function setupProvenance(report: Report, defaultState: IApplicationState,
         (id: NodeID) => provenance.goToNode(id),
         true, false, undefined, { height: 500, width: 150, textSize: 12, verticalSpace: 25 });
     }
-  }
+  };
 
   provVisUpdate();
 

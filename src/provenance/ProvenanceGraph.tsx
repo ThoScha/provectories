@@ -1,122 +1,142 @@
 import React from "react";
 import { Report } from "report";
 import { setupProvenance } from "./Provenance";
-import { IFeatureVector } from "./interfaces";
-import { captureBookmark, exportData, getVisualAttributeMapper, toObjectKey, getCurrentVisuals } from "./utils";
+import { IProvectories, IAppState } from "./interfaces";
+import { captureBookmark, exportData, toCamelCaseString, getCurrentVisuals, makeDeepCopy, downloadGraphAsFeatVecCsv } from "./utils";
+import { Provenance } from "@visdesignlab/trrack";
 
 export function ProvenanceGraph({ report }: { report: Report }) {
-  const featureVector = React.useRef<IFeatureVector>({ time: 0, visuals: {} });
-  const bookmark = React.useRef<string>('');
+  const appStateRef = React.useRef<IAppState>({});
+  const bookmarkRef = React.useRef<string>('');
+  const provenanceRef = React.useRef<Provenance<IProvectories, string, void>>();
 
   React.useEffect(() => {
-    const provectories = async () => {
-      const initFeatureVector = async () => {
-        const featVecVis = featureVector.current.visuals;
-        const visuals = await getCurrentVisuals(report);
-        visuals.forEach(async (v) => {
-          const columnToAttributeMap = await getVisualAttributeMapper(v);
-          const title = toObjectKey(v.title);
-          if (featVecVis && !featVecVis[title]) {
-            featVecVis[toObjectKey(title)] = { visDesc: { selected: null, type: v.type, columnToAttributeMap }, visState: {} };
-          }
+    /**
+     * Initialize appStateRef
+     * Only possible if report is loaded
+     */
+    const initAppState = async () => {
+      const visuals = await getCurrentVisuals(report);
+      visuals.forEach((v) => {
+        const title = toCamelCaseString(v.title);
+        if (appStateRef.current && !appStateRef.current[title]) {
+          appStateRef.current[toCamelCaseString(title)] = { selected: null, type: v.type, visState: {} };
+        }
+      });
+    };
+
+    /**
+     * Sets the selected attribute of given visuals extracted from the click-event
+     * Only possible if report is loaded
+     * @param event click-event from dashboard eventlistener
+     */
+    const setVisSelected = (event: any): string => {
+      const { dataPoints } = event.detail;
+      const { type, title } = event.detail.visual;
+      const visuals = appStateRef.current;
+      let label = title + ' - ';
+
+      // clears non slicer values when non slicer selection
+      if (type !== 'slicer') {
+        Object.keys(visuals).forEach((key) => {
+          const visDesc = visuals[key];
+          visDesc.selected = visDesc.type !== 'slicer' ? null : visDesc.selected;
         });
-      };
+      }
+      // asign selected values
+      if (dataPoints.length > 0) {
+        const visDesc = visuals[toCamelCaseString(title)];
+        dataPoints[0].identity.forEach((i: any, idx: number) => {
+          visDesc.selected = { ...visDesc.selected, [i.target.column]: i.equals };
+          label += `${idx > 0 ? '; ' : ''}${i.target.column}: ${i.equals}`;
+        });
+        return label;
+      }
+      return label + 'deselected';
+    };
 
-      const setVisSelected = (event: any): string => {
-        const { dataPoints } = event.detail;
-        const { type, title } = event.detail.visual;
-        const { visuals } = featureVector.current;
-        let label = title + ' - ';
+    /**
+     * Sets the current state of all visuals of the dashboard on given appState
+     * Only possible if report is loaded
+     * @param appState appState object of which the visuals should be set
+     * @param report to extract the current visuals state
+     */
+    const setVisState = async (appState: IAppState, report: Report): Promise<IAppState> => {
+      const visuals = await getCurrentVisuals(report);
+      await Promise.all(visuals.map(async (v) => {
+        const result = await exportData(v);
 
-        // clears non slicer values when non slicer selection
-        if (type !== 'slicer') {
-          Object.keys(visuals).forEach((key) => {
-            const { visDesc } = visuals[key];
-            visDesc.selected = visDesc.type !== 'slicer' ? null : visDesc.selected;
-          });
+        if (!result) {
+          return;
         }
-        // asign selected values
-        if (dataPoints.length > 0) {
-          const { visDesc } = visuals[toObjectKey(title)];
-          dataPoints[0].identity.forEach((i: any, idx: number) => {
-            visDesc.selected = { ...visDesc.selected, [i.target.column]: i.equals };
-            label += `${idx > 0 ? '; ' : ''}${i.target.column}: ${i.equals}`;
-          });
-          return label;
-        }
-        return label + 'deselected';
-      };
+        // vectorize data string && remove last row (empty)
+        const data = result.data.replaceAll("\n", "").split('\r').map((d) => d.split(',')).slice(0, -1);
+        const groupedData: { [key: string]: Set<any> } = {};
 
-      const setVisDesc = async (): Promise<void> => {
-        const featVecVis = featureVector.current.visuals;
-        const visuals = await getCurrentVisuals(report);
-        visuals.forEach(async (v) => {
-          const result = await exportData(v);
+        // group data columnwise
+        data[0].forEach((header, index) => {
+          const key = toCamelCaseString(header);
+          groupedData[key] = new Set();
+          const currSet = groupedData[key];
 
-          if (!result) {
-            return;
-          }
-          // vectorize data string && remove last row (empty)
-          const data = result.data.replaceAll("\n", "").split('\r').map((d) => d.split(',')).slice(0, -1);
-          const groupedData: { [key: string]: Set<any> } = {};
-
-          // group data columnwise
-          data[0].forEach((header, index) => {
-            const key = toObjectKey(header);
-            groupedData[key] = new Set();
-            const currSet = groupedData[key];
-
-            data.forEach((row, idx) => {
-              // skip headers and empty values
-              if (idx === 0 || !row[index]) {
-                return;
-              }
-              const cell = row[index];
-              const number = cell.match(/\d+/);
-              const value = number ? parseInt(number[0]) : cell;
-              currSet.add(value);
-            });
-          });
-
-          const currVis = featVecVis[toObjectKey(v.title)];
-          currVis.visState = {};
-          const featVis = currVis.visState;
-
-          // assign to feature vector in right format
-          Object.keys(groupedData).forEach((key) => {
-            const currArr: (string | number)[] = Array.from(groupedData[key]);
-            const attribute = currVis.visDesc.columnToAttributeMap[key];
-
-            if (!featVis[attribute]) {
-              featVis[attribute] = {}
+          data.forEach((row, idx) => {
+            // skip headers and empty values
+            if (idx === 0 || !row[index]) {
+              return;
             }
-            featVis[attribute][key] = typeof currArr[0] === 'number' ?
-              [Math.min(...(currArr as number[])), Math.max(...(currArr as number[]))] : currArr;
+            const cell = row[index];
+            const number = cell.match(/\d+/);
+            const value = number ? parseInt(number[0]) : cell;
+            currSet.add(value);
           });
         });
-      };
 
-      const setBookmark = async () => await captureBookmark(report).then((captured) => bookmark.current = captured?.state || '');
-      const setCurrTime = () => featureVector.current.time = new Date().getTime();
+        const { visState } = appState[toCamelCaseString(v.title)];
+        // assign to visual state in right format
+        Object.keys(groupedData).forEach((key) => {
+          const currArr: (string | number)[] = Array.from(groupedData[key]);
+          visState[key] = typeof currArr[0] === 'number' ?
+            [Math.min(...(currArr as number[])), Math.max(...(currArr as number[]))] : currArr;
+        });
+      }));
+      return appState;
+    };
 
-      await initFeatureVector();
-      await setVisDesc();
-      await setBookmark();
-      setCurrTime();
+    /**
+     * Captures bookmark of the current dashboard state, sets it in the bookmarkRef and returns bookmark
+     * Only possible if report is loaded
+     */
+    const setBookmark = async (): Promise<string> => {
+      return await captureBookmark(report).then((captured) => {
+        const bookmark = captured?.state || '';
+        bookmarkRef.current = bookmark;
+        return bookmark;
+      });
+    };
 
-      const actions = setupProvenance(
-        report,
-        { featureVector: featureVector.current, bookmark: bookmark.current },
-        bookmark
-      ).actions;
+    /**
+     * initializes provenance, click-event handler and the appState
+     */
+    const provectories = async () => {
+      await initAppState();
+      const appState = await setVisState(appStateRef.current, report);
+      const bookmark = await setBookmark();
+      const { actions, provenance } = setupProvenance(
+        report, { appState, bookmark }, bookmarkRef
+      );
+      provenanceRef.current = provenance;
 
       report.on("dataSelected", async (event: any) => {
-        await setVisDesc();
-        await setBookmark();
         const label = setVisSelected(event);
-        setCurrTime();
-        actions.event({ bookmark: bookmark.current, featureVector: featureVector.current }, label);
-        console.log('Feature Vector', featureVector.current.visuals);
+        const bookmark = await setBookmark();
+
+        // function call is done in provenance for better performance on the dashboard
+        const onDashboardClick = async () => {
+          const appState = await setVisState(makeDeepCopy(appStateRef.current), report);
+          return { newState: { bookmark, appState }, label };
+        };
+
+        actions.event(onDashboardClick);
       });
     };
 
@@ -124,9 +144,17 @@ export function ProvenanceGraph({ report }: { report: Report }) {
     report.on('loaded', async () => {
       await provectories().then(() => report.off('loaded'));
     });
-
     // dashboard rerender doesn't change the report object
   }, [report]);
 
-  return <div id="provDiv" style={{ width: 300, marginLeft: 5 }} />;
+  return <div>
+    <div id="provDiv" style={{ width: 300, marginLeft: 5 }} />
+    <button
+      className="ui button"
+      style={{ float: 'right', marginRight: 0, marginTop: 2 }}
+      onClick={() => provenanceRef.current ? downloadGraphAsFeatVecCsv(provenanceRef.current) : null}
+    >
+      Download
+    </button>
+  </div>;
 }

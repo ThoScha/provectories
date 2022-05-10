@@ -1,34 +1,22 @@
-
-export interface IVisDesc {
-  type: string;
-  columnToAttributeMap: { [key: string]: string };
-  selected: {
-    [key: string]: string | number;
-  } | null;
-}
-
 export interface IVisState {
-  [key: string]: {
-    [key: string]: (number | string)[];
-  };
+  [key: string]: (number | string)[];
 }
 
-export interface IVis {
+export interface IAppState {
   [key: string]: {
-    visDesc: IVisDesc;
+    type: string;
+    selected: {
+      [key: string]: string | number;
+    } | null;
     visState: IVisState;
   };
 }
 
-export interface IFeatureVector {
-  time: number;
-  visuals: IVis;
+export type IFeatureVector = {
+  [key: string]: number[][];
 }
 
-export interface IApplicationState {
-  featureVector: IFeatureVector;
+export interface IProvectories {
+  appState: IAppState;
   bookmark: string;
 }
-
-
-
