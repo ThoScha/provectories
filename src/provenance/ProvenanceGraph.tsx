@@ -96,7 +96,7 @@ export function ProvenanceGraph({ report }: { report: Report }) {
         Object.keys(groupedData).forEach((key) => {
           const currArr: (string | number)[] = Array.from(groupedData[key]);
           visState[key] = typeof currArr[0] === 'number' ?
-            [Math.min(...(currArr as number[])), Math.max(...(currArr as number[]))] : currArr;
+            [Math.min(...(currArr as number[]), 0), Math.max(...(currArr as number[]), 0)] : currArr;
         });
       }));
       return appState;
@@ -133,6 +133,7 @@ export function ProvenanceGraph({ report }: { report: Report }) {
         // function call is done in provenance for better performance on the dashboard
         const onDashboardClick = async () => {
           const appState = await setVisState(makeDeepCopy(appStateRef.current), report);
+          console.log(appState);
           return { newState: { bookmark, appState }, label };
         };
 
