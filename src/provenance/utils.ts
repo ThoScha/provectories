@@ -84,26 +84,27 @@ export function toCamelCaseString(title: string): string {
  * @param visual 
  */
 export async function getVisualAttributeMapper(visual: VisualDescriptor): Promise<{ [key: string]: string }> {
-	const roleToAttributeMap = {
-		'Y': 'yAxis',
-		'Category': 'xAxis',
-		'Series': 'Legend',
-		'Values': 'Field'
-	};
+	// const roleToAttributeMap = {
+	// 	'Y': 'yAxis',
+	// 	'Category': 'xAxis',
+	// 	'Series': 'Legend',
+	// 	'Values': 'Field'
+	// };
 
 	const mapper: { [key: string]: string } = {};
 	if (visual.getCapabilities) {
 		const capabilities = await visual.getCapabilities();
 		if (capabilities.dataRoles) {
-			capabilities.dataRoles.forEach(async (role) => {
+			await Promise.all(capabilities.dataRoles.map(async (role) => {
 				const dataFields = await visual.getDataFields(role.name);
 				if (dataFields.length > 0) {
 					await Promise.all(dataFields.map(async (d, idx) => {
 						const attribute = await visual.getDataFieldDisplayName(role.name, idx);
-						mapper[attribute.replaceAll(" ", "")] = roleToAttributeMap[role.name];
+						// mapper[toCamelCaseString(attribute)] = roleToAttributeMap[role.name];
+						mapper[toCamelCaseString(attribute)] = role.name;
 					}));
 				}
-			})
+			}))
 		}
 	}
 	return mapper;
@@ -142,7 +143,7 @@ function appStateToFeatureVector(currState: IAppState, rootState: IAppState): IF
 			const vector = (featureVector[vKey + '.' + aKey] = []) as number[][];
 			// number arrays will be used as they are
 			if (typeof rootAttribute[0] === 'number') {
-				vector.push(currAttribute.length > 0 ? currAttribute as number[] : [0, 0]);
+				vector.push(currAttribute.length > 0 ? currAttribute as number[] : [0]);
 			} else { // string arrays will be encoded
 				vector.push(
 					...rootAttribute.map((root) => {

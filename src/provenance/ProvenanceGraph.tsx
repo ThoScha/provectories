@@ -2,7 +2,7 @@ import React from "react";
 import { Report } from "report";
 import { setupProvenance } from "./Provenance";
 import { IProvectories, IAppState } from "./interfaces";
-import { captureBookmark, exportData, toCamelCaseString, getCurrentVisuals, makeDeepCopy, downloadGraphAsFeatVecCsv } from "./utils";
+import { captureBookmark, exportData, toCamelCaseString, getCurrentVisuals, makeDeepCopy, downloadGraphAsFeatVecCsv, getVisualAttributeMapper } from "./utils";
 import { Provenance } from "@visdesignlab/trrack";
 
 export function ProvenanceGraph({ report }: { report: Report }) {
@@ -65,19 +65,20 @@ export function ProvenanceGraph({ report }: { report: Report }) {
       const visuals = await getCurrentVisuals(report);
       await Promise.all(visuals.map(async (v) => {
         const result = await exportData(v);
-
+        const categoryMapper = await getVisualAttributeMapper(v);
         if (!result) {
           return;
         }
         // vectorize data string && remove last row (empty)
         const data = result.data.replaceAll("\n", "").split('\r').map((d) => d.split(',')).slice(0, -1);
-        const groupedData: { [key: string]: Set<any> } = {};
+        const groupedData: { [key: string]: any[] } = {};
 
         // group data columnwise
         data[0].forEach((header, index) => {
           const key = toCamelCaseString(header);
-          groupedData[key] = new Set();
+          groupedData[key] = [];
           const currSet = groupedData[key];
+          const category = categoryMapper[key];
 
           data.forEach((row, idx) => {
             // skip headers and empty values
@@ -86,17 +87,20 @@ export function ProvenanceGraph({ report }: { report: Report }) {
             }
             const cell = row[index];
             const number = cell.match(/\d+/);
-            const value = number ? parseInt(number[0]) : cell;
-            currSet.add(value);
+            // only add as number, when cell is not from a category column or legend
+            const value = number && category === 'Y' ? parseInt(number[0]) : cell;
+            currSet.push(value);
           });
         });
 
         const { visState } = appState[toCamelCaseString(v.title)];
         // assign to visual state in right format
         Object.keys(groupedData).forEach((key) => {
-          const currArr: (string | number)[] = Array.from(groupedData[key]);
+          const currArr: string[] | number[] = Array.from(groupedData[key]);
           visState[key] = typeof currArr[0] === 'number' ?
-            [Math.min(...(currArr as number[]), 0), Math.max(...(currArr as number[]), 0)] : currArr;
+            // [Math.min(...(currArr as number[]), 0), Math.max(...(currArr as number[]), 0)] 
+            [(currArr as number[]).reduce((a, b) => a + b) / currArr.length]
+            : Array.from(new Set(currArr as string[]));
         });
       }));
       return appState;
