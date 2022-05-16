@@ -8,7 +8,8 @@ import { UserAgentApplication, AuthError, AuthResponse } from "msal";
 import { service, factories, models, IEmbedConfiguration, Report } from "powerbi-client";
 import "./App.css";
 import * as config from "./Config";
-import { ProvenanceGraph } from "./provenance/ProvenanceGraph";
+import { provectories } from "./provenance/Provectories";
+import { DownloadAsCSVBtn } from "./provenance/DownloadAsCSVBtn";
 const powerbi = new service.Service(factories.hpmFactory, factories.wpmpFactory, factories.routerFactory);
 
 let accessToken = "";
@@ -17,7 +18,7 @@ let reportContainer: HTMLElement;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface AppProps { };
-interface AppState { accessToken: string; embedUrl: string; error: string[]; reportRef: RefObject<any> };
+interface AppState { accessToken: string; embedUrl: string; error: string[]; reportRef: RefObject<any>; };
 
 class App extends React.Component<AppProps, AppState> {
 	private myReport: any | Report;
@@ -31,16 +32,14 @@ class App extends React.Component<AppProps, AppState> {
 	// React function
 	render(): JSX.Element {
 		this.myReport = this.renderMyReport();
-
 		return (<>
-			<div style={{ display: 'flex' }}>
+			<div style={{ display: 'flex', flexDirection: 'column', margin: 15 }}>
 				<div style={{ display: 'flex', flex: 1 }}>
-					<div id="reportContainer" ref={this.state.reportRef} style={{ display: 'flex', flexDirection: 'column', flex: 1 }} >
+					<div id="reportContainer" ref={this.state.reportRef} style={{ display: 'flex', flex: 1, marginBottom: 5 }} >
 						Loading the report...
 					</div>
 				</div>
-				{/* ProvenanceGraph only works, when there is a report */}
-				{this.myReport ? <ProvenanceGraph report={this.myReport} /> : null}
+				{this.myReport ? <DownloadAsCSVBtn report={this.myReport} /> : null}
 			</div>
 		</>)
 			;
@@ -103,9 +102,12 @@ class App extends React.Component<AppProps, AppState> {
 			// Clear any other loaded handler events
 			report.off("loaded");
 
+
 			// Triggers when a content schema is successfully loaded
 			report.on("loaded", function () {
 				console.log("Report load successful");
+				// init provectories
+				provectories(report);
 			});
 
 			// Clear any other rendered handler events

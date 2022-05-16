@@ -1,5 +1,4 @@
-import { Provenance, NodeID, initProvenance } from '@visdesignlab/trrack';
-import { ProvVisCreator } from '@visdesignlab/trrack-vis';
+import { Provenance, initProvenance } from '@visdesignlab/trrack';
 import { Report } from 'powerbi-client';
 import { IProvectories } from './interfaces';
 import { applyBookmark } from './utils';
@@ -13,13 +12,14 @@ interface IAppProvenance {
   provenance: Provenance<IProvectories, string, void>;
   actions: IAction;
 }
+
 /**
  * Initializes trrack and trrack-vis provenance
  * @param report Current report to apply bookmarks on
  * @param defaultState Initial state of the dashboard
  * @param bookmarkRef Current bookmarkRef to get the update bookmark for performance improvements
  */
-export function setupProvenance(report: Report, defaultState: IProvectories, bookmarkRef: React.MutableRefObject<string>): IAppProvenance {
+export function setupProvenance(report: Report, defaultState: IProvectories, bookmarkRef: { current: string }): IAppProvenance {
   const provenance = initProvenance<IProvectories, string, void>(defaultState as IProvectories);
 
   provenance.addGlobalObserver(() => {
@@ -46,18 +46,18 @@ export function setupProvenance(report: Report, defaultState: IProvectories, boo
     }, label);
   };
 
-  const provVisUpdate = () => {
-    const provDiv = document.getElementById("provDiv");
-    if (provDiv) {
-      ProvVisCreator(
-        provDiv!,
-        provenance,
-        (id: NodeID) => provenance.goToNode(id),
-        true, false, undefined, { height: 500, width: 150, textSize: 12, verticalSpace: 25 });
-    }
-  };
-
-  provVisUpdate();
+  // removed trrack vis because of simplicity (list instead of graph)
+  // const provVisUpdate = () => {
+  //   const provDiv = document.getElementById("provDiv");
+  //   if (provDiv) {
+  //     ProvVisCreator(
+  //       provDiv!,
+  //       provenance,
+  //       (id: NodeID) => provenance.goToNode(id),
+  //       true, false, undefined, { height: 500, width: 150, textSize: 12, verticalSpace: 25 });
+  //   }
+  // };
+  // provVisUpdate();
 
   return {
     provenance,
