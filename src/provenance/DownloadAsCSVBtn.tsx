@@ -7,20 +7,18 @@ import { Report } from "powerbi-client";
 export function DownloadAsCSVBtn({ report }: { report: Report }) {
   const [prov, setProv] = React.useState<Provenance<IProvectories, string, void> | null>(null);
 
-  React.useEffect(() => {
-    /*
-      Provectories.provenance is an uncontrolled, empty object in the beginning
-      When the report is loaded and rendered Provectories.provenance isn't empty anymore
-      Set prov with Provectories.provenance when report is rerendered the first time to get an complete object and trigger a rerender for the JSX
+  /*
+    Provectories.provenance is an uncontrolled, empty object in the beginning
+    When the report is loaded and rendered Provectories.provenance isn't empty anymore
+    Set prov with Provectories.provenance when report is rerendered the first time to get an complete object and trigger a rerender for the JSX
     */
-    report.on('rendered', () => {
-      console.log("triggered")
-      if (provenance?.root) {
-        setProv(provenance);
-        report.off('rendered');
-      }
-    });
-  }, [report]);
+  report.off('rendered');
+  report.on('rendered', () => {
+    if (provenance?.root && !prov?.root) {
+      setProv(provenance);
+      report.off('rendered');
+    }
+  });
 
   /**
   * Takes an appState and encodes it as a feature vector. Needs initial app state to know if an attribute is filtered
@@ -109,18 +107,29 @@ export function DownloadAsCSVBtn({ report }: { report: Report }) {
   //  * Returns csv file representing feature vectors of a provenance graph
   //  * @param provenance Provenance object to convert to csv
   //  */
-  // const downloadGraphAsFeatVecCsv = (provenance: Provenance<IProvectories, string, void>): void => {
-  //   window.open(encodeURI(featureVectorsToCsvString(featureVectorizeGraph(provenance))));
-  // };
+  const downloadGraphAsFeatVecCsv = (provenance: Provenance<IProvectories, string, void>): void => {
+    const uri = encodeURI(featureVectorsToCsvString(featureVectorizeGraph(provenance)))
+    const anchor = document.createElement('a');
+    anchor.style.display = 'none';
+    if ("download" in anchor) {
+      anchor.download = `provectories-${new Date().getTime()}.csv`;
+      anchor.href = uri;
+      anchor.click();
+    } else {
+      window.open(uri, '_self');
+    }
+    anchor.remove();
+  };
 
   return <div style={{ marginLeft: 'auto' }}>
-    {prov ? <a
-      style={{ marginRight: 0 }}
-      className="ui button"
-      type="button"
-      download={`provectories-${new Date().getTime()}.csv`} // TODO: maybe uuid?
-      href={encodeURI(featureVectorsToCsvString(featureVectorizeGraph(prov)))}
-      onClick={() => window.open(`mailto:thomas.schachinger@icloud.com?body=${encodeURI(featureVectorsToCsvString(featureVectorizeGraph(prov)))}&subject=Provectories Test Data`, '_self')}
-    >Download as CSV</a> : null}
+    {prov ?
+      <div style={{ marginRight: 0 }}>
+        <button type="button" className="ui button" onClick={() => window.location.reload()}>
+          Reset provenance
+        </button>
+        <button className="ui button" type="button" onClick={() => downloadGraphAsFeatVecCsv(prov)}>
+          Download as CSV
+        </button>
+      </div> : null}
   </div>;
 }
