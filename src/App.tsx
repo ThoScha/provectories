@@ -39,7 +39,7 @@ class App extends React.Component<AppProps, AppState> {
 						Loading the report...
 					</div>
 				</div>
-				{this.myReport ? <DownloadAsCSVBtn report={this.myReport} /> : null}
+				{this.myReport ? <DownloadAsCSVBtn report={this.myReport} forceUpdate={this.forceUpdate.bind(this)} /> : null}
 			</div>
 		</>)
 			;
@@ -63,7 +63,6 @@ class App extends React.Component<AppProps, AppState> {
 	}
 
 	renderMyReport(): Report {
-
 		let report: any | Report = null;
 
 		if (this.state.error.length) {

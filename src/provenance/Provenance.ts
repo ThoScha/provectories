@@ -1,7 +1,6 @@
 import { Provenance, initProvenance } from '@visdesignlab/trrack';
 import { Report } from 'powerbi-client';
 import { IProvectories } from './interfaces';
-import { applyBookmark } from './utils';
 import { ActionReturnType } from '@visdesignlab/trrack/dist/Types/Action';
 
 export interface IAction {
@@ -22,13 +21,14 @@ interface IAppProvenance {
 export function setupProvenance(report: Report, defaultState: IProvectories, bookmarkRef: { current: string }): IAppProvenance {
   const provenance = initProvenance<IProvectories, string, void>(defaultState as IProvectories);
 
-  provenance.addGlobalObserver(() => {
-    const currentNode = provenance.getState(provenance.current);
-    if (bookmarkRef.current !== currentNode.bookmark) {
-      applyBookmark(provenance.getState(provenance.current).bookmark, report);
-      bookmarkRef.current = '';
-    }
-  });
+  // provenance.addGlobalObserver(() => {
+  //   const currentNode = provenance.getState(provenance.current);
+  //   if (bookmarkRef.current !== currentNode.bookmark) {
+  //     console.log('applied')
+  //     applyBookmark(provenance.getState(provenance.current).bookmark, report);
+  //     bookmarkRef.current = '';
+  //   }
+  // });
 
   provenance.done();
 

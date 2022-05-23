@@ -33,7 +33,7 @@ class Provectories {
 		const { dataPoints } = event.detail;
 		const { type, title } = event.detail.visual;
 		const visuals = this.appState;
-		let label = title + ' - ';
+		let label = `${title} (${type}) - `;
 
 		// clears non slicer values when non slicer selection
 		if (type !== 'slicer') {
@@ -47,9 +47,9 @@ class Provectories {
 			const visDesc = visuals[toCamelCaseString(title)];
 			dataPoints[0].identity.forEach((i: any, idx: number) => {
 				visDesc.selected = { ...visDesc.selected, [i.target.column]: i.equals };
-				label += `${idx > 0 ? '; ' : ''}${i.target.column}: ${i.equals}`;
+				label += `${idx > 0 ? ', ' : ''}${i.target.column}: ${i.equals}`;
 			});
-			return label;
+			return label + ' selected';
 		}
 		return label + 'deselected';
 	};
@@ -96,8 +96,7 @@ class Provectories {
 			Object.keys(groupedData).forEach((key) => {
 				const currArr: string[] | number[] = Array.from(groupedData[key]);
 				visState[key] = typeof currArr[0] === 'number' ?
-					[(currArr as number[]).reduce((a, b) => a + b) / currArr.length]
-					: Array.from(new Set(currArr as string[]));
+					currArr.length : Array.from(new Set(currArr as string[]));
 			});
 		}));
 		return appState;
@@ -149,7 +148,6 @@ class Provectories {
 			// function call is done in provenance for better performance on the dashboard
 			const onDashboardClick = async () => {
 				const appState = await this.setVisState(makeDeepCopy(this.appState));
-				console.log(appState);
 				return { newState: { bookmark, appState }, label };
 			};
 

@@ -1,5 +1,5 @@
 export interface IVisState {
-  [key: string]: (number | string)[];
+  [key: string]: number | string[];
 }
 
 export interface IAppState {
@@ -13,8 +13,10 @@ export interface IAppState {
 }
 
 export type IFeatureVector = {
-  [key: string]: number[][];
+  [key: string]: number[];
 }
+
+export type IExportFeatureVectorRow = (number | string | number[])[];
 
 export interface IProvectories {
   appState: IAppState;
