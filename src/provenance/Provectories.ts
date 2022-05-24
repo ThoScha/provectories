@@ -140,18 +140,26 @@ class Provectories {
 		);
 
 		setProvenance(provenance);
+		const activePage = (await this.report.getActivePage()).name;
 
 		this.report?.on("dataSelected", async (event: any) => {
-			const label = this.setVisSelected(event);
-			const bookmark = await this.setBookmark();
+			// used closure to check if the current page equals the page provenance is initialized on
+			// otherwise the provenance would make no sense for this case
+			if (activePage === (await this.report.getActivePage()).name) {
+				const label = this.setVisSelected(event);
+				const bookmark = await this.setBookmark();
 
-			// function call is done in provenance for better performance on the dashboard
-			const onDashboardClick = async () => {
-				const appState = await this.setVisState(makeDeepCopy(this.appState));
-				return { newState: { bookmark, appState }, label };
-			};
+				// function call is done in provenance for better performance on the dashboard
+				const onDashboardClick = async () => {
+					const appState = await this.setVisState(makeDeepCopy(this.appState));
+					console.log(appState);
+					return { newState: { bookmark, appState }, label };
+				};
 
-			actions.event(onDashboardClick);
+				actions.event(onDashboardClick);
+			} else {
+				console.log("Not on the tracked page");
+			}
 		});
 	};
 }

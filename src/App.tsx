@@ -41,8 +41,7 @@ class App extends React.Component<AppProps, AppState> {
 				</div>
 				{this.myReport ? <DownloadAsCSVBtn report={this.myReport} forceUpdate={this.forceUpdate.bind(this)} /> : null}
 			</div>
-		</>)
-			;
+		</>);
 	}
 
 	// React function
@@ -107,14 +106,6 @@ class App extends React.Component<AppProps, AppState> {
 				console.log("Report load successful");
 				// init provectories
 				provectories(report);
-			});
-
-			// Clear any other rendered handler events
-			report.off("rendered");
-
-			// Triggers when a content is successfully embedded in UI
-			report.on("rendered", function () {
-				// console.log("Report render successful");
 			});
 
 			// Clear any other error handler event

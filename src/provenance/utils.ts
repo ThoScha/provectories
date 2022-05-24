@@ -115,7 +115,7 @@ export async function getVisualAttributeMapper(visual: VisualDescriptor): Promis
 export async function getCurrentVisuals(report: Report): Promise<VisualDescriptor[]> {
 	try {
 		return report
-			.getPages().then(async (pages) => pages[1]
+			.getPages().then(async (pages) => pages.filter((page) => page.isActive)[0]
 				.getVisuals().then((visuals) => visuals
 					.filter((v) => v.type !== 'card' && v.type !== 'shape')));
 	} catch (err) {

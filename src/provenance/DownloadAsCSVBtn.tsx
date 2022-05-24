@@ -12,7 +12,7 @@ export function DownloadAsCSVBtn({ report, forceUpdate }: { report: Report; forc
     Provectories.provenance is an uncontrolled, empty object in the beginning
     When the report is loaded and rendered Provectories.provenance isn't empty anymore
     Set prov with Provectories.provenance when report is rerendered the first time to get an complete object and trigger a rerender for the JSX
-    */
+  */
   report.off('rendered');
   report.on('rendered', () => {
     if (provenance?.root && !prov?.root) {
