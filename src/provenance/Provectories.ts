@@ -3,6 +3,7 @@ import { setupProvenance } from "./Provenance";
 import { IAppState, IProvectories } from "./interfaces";
 import { captureBookmark, exportData, toCamelCaseString, getCurrentVisuals, makeDeepCopy, getVisualAttributeMapper } from "./utils";
 import { Provenance } from "@visdesignlab/trrack";
+import 'powerbi-report-authoring';
 
 export const provenance: Provenance<IProvectories, string, void> = {} as Provenance<IProvectories, string, void>;
 
@@ -43,14 +44,15 @@ class Provectories {
 			});
 		}
 		// asign selected values
+		const visDesc = visuals[toCamelCaseString(title)];
 		if (dataPoints.length > 0) {
-			const visDesc = visuals[toCamelCaseString(title)];
 			dataPoints[0].identity.forEach((i: any, idx: number) => {
-				visDesc.selected = { ...visDesc.selected, [i.target.column]: i.equals };
+				visDesc.selected = { ...visDesc.selected, [i.target.column]: i.equals.toString() };
 				label += `${idx > 0 ? ', ' : ''}${i.target.column}: ${i.equals}`;
 			});
 			return label + ' selected';
 		}
+		visDesc.selected = null;
 		return label + 'deselected';
 	};
 
@@ -96,7 +98,7 @@ class Provectories {
 			Object.keys(groupedData).forEach((key) => {
 				const currArr: string[] | number[] = Array.from(groupedData[key]);
 				visState[key] = typeof currArr[0] === 'number' ?
-					currArr.length : Array.from(new Set(currArr as string[]));
+					(currArr as number[]).reduce((a, b) => a + b, 0) : Array.from(new Set(currArr as string[]));
 			});
 		}));
 		return appState;
