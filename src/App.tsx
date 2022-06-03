@@ -152,7 +152,6 @@ class App extends React.Component<AppProps, AppState> {
 			} else if (response.tokenType === "access_token") {
 
 				accessToken = response.accessToken;
-				thisObj.setUsername(response.account.name);
 				thisObj.getembedUrl();
 
 			} else {
@@ -177,7 +176,6 @@ class App extends React.Component<AppProps, AppState> {
 
 					// get access token from response: response.accessToken
 					accessToken = response.accessToken;
-					this.setUsername(response.account.name);
 					this.getembedUrl();
 				})
 				.catch((err: AuthError) => {
@@ -239,13 +237,6 @@ class App extends React.Component<AppProps, AppState> {
 				// Error in making the API call
 				thisObj.setState({ error: error });
 			})
-	}
-
-	// Show username in the UI
-	setUsername(username: string): void {
-		const welcome = document.getElementById("welcome");
-		if (welcome !== null)
-			welcome.innerText = "Welcome, " + username;
 	}
 }
 
