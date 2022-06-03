@@ -1,5 +1,6 @@
 {
   "name": "powerbi-embedded-sample",
+  "homepage": "https://thoscha.github.io/provectories/",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
