@@ -57,7 +57,7 @@ class App extends React.Component<AppProps, AppState> {
 		} else {
 
 			// Authenticate the user and generate the access token
-			this.authenticate();
+			this.getembedUrl();
 		}
 	}
 
@@ -129,80 +129,99 @@ class App extends React.Component<AppProps, AppState> {
 	}
 
 	// Authenticating to get the access token
-	authenticate(): void {
-		const thisObj = this;
+	// authenticate(): void {
+	// 	const thisObj = this;
 
-		const msalConfig = {
-			auth: {
-				clientId: config.clientId
-			}
-		};
+	// 	const msalConfig = {
+	// 		auth: {
+	// 			clientId: config.clientId
+	// 		}
+	// 	};
 
-		const loginRequest = {
-			scopes: config.scopes
-		};
+	// 	const loginRequest = {
+	// 		scopes: config.scopes
+	// 	};
 
-		const msalInstance: UserAgentApplication = new UserAgentApplication(msalConfig);
+	// 	const msalInstance: UserAgentApplication = new UserAgentApplication(msalConfig);
 
-		function successCallback(response: AuthResponse): void {
+	// 	function successCallback(response: AuthResponse): void {
 
-			if (response.tokenType === "id_token") {
-				thisObj.authenticate();
+	// 		if (response.tokenType === "id_token") {
+	// 			thisObj.authenticate();
 
-			} else if (response.tokenType === "access_token") {
+	// 		} else if (response.tokenType === "access_token") {
 
-				accessToken = response.accessToken;
-				thisObj.getembedUrl();
+	// 			accessToken = response.accessToken;
+	// 			thisObj.getembedUrl();
 
-			} else {
+	// 		} else {
 
-				thisObj.setState({ error: [("Token type is: " + response.tokenType)] });
-			}
-		}
+	// 			thisObj.setState({ error: [("Token type is: " + response.tokenType)] });
+	// 		}
+	// 	}
 
-		function failCallBack(error: AuthError): void {
+	// 	function failCallBack(error: AuthError): void {
 
-			thisObj.setState({ error: ["Redirect error: " + error] });
-		}
+	// 		thisObj.setState({ error: ["Redirect error: " + error] });
+	// 	}
 
-		msalInstance.handleRedirectCallback(successCallback, failCallBack);
+	// 	msalInstance.handleRedirectCallback(successCallback, failCallBack);
 
-		// check if there is a cached user
-		if (msalInstance.getAccount()) {
+	// 	// check if there is a cached user
+	// 	if (msalInstance.getAccount()) {
 
-			// get access token silently from cached id-token
-			msalInstance.acquireTokenSilent(loginRequest)
-				.then((response: AuthResponse) => {
+	// 		// get access token silently from cached id-token
+	// 		msalInstance.acquireTokenSilent(loginRequest)
+	// 			.then((response: AuthResponse) => {
 
-					// get access token from response: response.accessToken
-					accessToken = response.accessToken;
-					this.getembedUrl();
-				})
-				.catch((err: AuthError) => {
+	// 				// get access token from response: response.accessToken
+	// 				accessToken = response.accessToken;
+	// 				this.getembedUrl();
+	// 			})
+	// 			.catch((err: AuthError) => {
 
-					// refresh access token silently from cached id-token
-					// makes the call to handleredirectcallback
-					if (err.name === "InteractionRequiredAuthError") {
-						msalInstance.acquireTokenRedirect(loginRequest);
-					}
-					else {
-						thisObj.setState({ error: [err.toString()] })
-					}
-				});
-		} else {
+	// 				// refresh access token silently from cached id-token
+	// 				// makes the call to handleredirectcallback
+	// 				if (err.name === "InteractionRequiredAuthError") {
+	// 					msalInstance.acquireTokenRedirect(loginRequest);
+	// 				}
+	// 				else {
+	// 					thisObj.setState({ error: [err.toString()] })
+	// 				}
+	// 			});
+	// 	} else {
 
-			// user is not logged in or cached, you will need to log them in to acquire a token
-			msalInstance.loginRedirect(loginRequest);
-		}
-	}
+	// 		// user is not logged in or cached, you will need to log them in to acquire a token
+	// 		msalInstance.loginRedirect(loginRequest);
+	// 	}
+	// }
 
 	// Power BI REST API call to get the embed URL of the report
-	getembedUrl(): void {
+	async getembedUrl(): Promise<void> {
 		const thisObj: this = this;
+
+		const headers = new Headers();
+		headers.append("Origin", "http://localhost");
+
+		const body = new FormData();
+		body.append("grant_type", "password");
+		body.append("username", "guest@provectories.onmicrosoft.com");
+		body.append("password", "Exam2022");
+		body.append("client_id", "d6724175-141c-4a38-a23e-ad289bf246b9");
+		body.append("scope", "https://graph.microsoft.com/mail.read");
+
+		const test = await fetch("https://login.microsoftonline.com/f165e14e-78ac-46bd-a7e6-b55d89aeb0fe/oauth2/v2.0/token", {
+			method: "POST",
+			mode: 'cors',
+			headers: headers,
+			body,
+		}).then((response) => response.json());
+
+		console.log(test);
 
 		fetch("https://api.powerbi.com/v1.0/myorg/groups/" + config.workspaceId + "/reports/" + config.reportId, {
 			headers: {
-				"Authorization": "Bearer " + accessToken
+				"Authorization": "Bearer " + test.access_token
 			},
 			method: "GET"
 		})
