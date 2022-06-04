@@ -32,16 +32,19 @@ class App extends React.Component<AppProps, AppState> {
 	// React function
 	render(): JSX.Element {
 		this.myReport = this.renderMyReport();
-		return (<>
-			<div style={{ display: 'flex', flexDirection: 'column', margin: 15 }}>
+		return (<div style={{ display: 'flex', flexDirection: 'column', margin: 15 }}>
+			<h2 id="title">
+				Provectories: New Hires Example
+			</h2>
+			<div style={{ display: 'flex', flexDirection: 'column', marginTop: 5 }}>
 				<div style={{ display: 'flex', flex: 1 }}>
-					<div id="reportContainer" ref={this.state.reportRef} style={{ display: 'flex', flex: 1, marginBottom: 5 }} >
+					<div id="reportContainer" ref={this.state.reportRef} style={{ display: 'flex', flex: 1, marginBottom: 5, height: "85vh" }} >
 						Loading the report...
 					</div>
 				</div>
 				{this.myReport ? <DownloadAsCSVBtn report={this.myReport} forceUpdate={this.forceUpdate.bind(this)} /> : null}
 			</div>
-		</>);
+		</div>);
 	}
 
 	// React function
