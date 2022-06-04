@@ -98,7 +98,7 @@ class Provectories {
 			Object.keys(groupedData).forEach((key) => {
 				const currArr: string[] | number[] = Array.from(groupedData[key]);
 				visState[key] = typeof currArr[0] === 'number' ?
-					(currArr as number[]).reduce((a, b) => a + b, 0) : Array.from(new Set(currArr as string[]));
+					(currArr as number[]) : Array.from(new Set(currArr as string[]));
 			});
 		}));
 		return appState;

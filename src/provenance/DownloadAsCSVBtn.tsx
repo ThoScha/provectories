@@ -28,27 +28,44 @@ export function DownloadAsCSVBtn({ report, forceUpdate }: { report: Report; forc
   */
   function appStateToFeatureVector(currState: IAppState, rootState: IAppState): IFeatureVector {
     const featureVector: IFeatureVector = {};
+    const selectedColumns = new Set<string>();
+    const filteredColumns = new Set<string>();
     Object.keys(rootState).forEach((vKey) => {
       const { visState, selected, type } = currState[vKey];
       const rootVisState = rootState[vKey].visState;
       Object.keys(rootVisState).forEach((aKey) => {
         const rootAttribute = rootVisState[aKey];
         const currAttribute = visState[aKey];
-        const vector = (featureVector[vKey + '.' + aKey] = []) as number[];
+        let columnTitle = vKey + '.' + aKey;
+        const vector = [] as number[];
         // number arrays will be used as they are
-        if (typeof rootAttribute === 'number') {
-          vector.push((currAttribute as number) / rootAttribute);
+        if (typeof rootAttribute[0] === 'number') {
+          columnTitle += "[numerical]";
+          vector.push(...currAttribute as number[]);
         } else { // string arrays will be encoded
-          rootAttribute.forEach((root) => {
-            vector.push(selected && selected[aKey] === root ? 1 : 0); // if selected 1
+          columnTitle += "[categorical]";
+          (rootAttribute as string[]).forEach((root) => {
+            if (selected && selected[aKey] === root) {// if selected 1 : 0
+              vector.push(1);
+              selectedColumns.add(columnTitle);
+            } else {
+              vector.push(0)
+            }
             if (type !== 'slicer') { // slicers can't be filtered
-              vector.push((currAttribute as string[]).includes(root) ? 0 : 1); // if filtered then 1 (included = !filtered)
+              if ((currAttribute as string[]).includes(root)) { // if filtered then 1 (included = !filtered)
+                vector.push(0);
+              } else {
+                vector.push(1);
+                filteredColumns.add(columnTitle);
+              }
             }
           });
         }
+        featureVector[columnTitle] = vector;
       });
     });
-    return featureVector;
+
+    return { selectedValues: Array.from(selectedColumns).join(", ") || "", filteredValues: Array.from(filteredColumns).join(", ") || "", ...featureVector };
   };
 
   /**
@@ -66,11 +83,11 @@ export function DownloadAsCSVBtn({ report, forceUpdate }: { report: Report; forc
       );
       // adding header row
       if (key === root.id) {
-        featureVectors.push(['time', 'user', 'label', ...Object.keys(currVector)]);
+        featureVectors.push(['timestamp', 'user', 'triggeredAction', ...Object.keys(currVector)]);
       }
       const newRow: IExportFeatureVectorRow = [currNode.metadata.createdOn || -1, USER, currNode.label];
       // skip first column since time is no key in feature vector
-      (featureVectors[0] as string[]).forEach((title) => currVector[title] ? newRow.push(currVector[title]) : null);
+      (featureVectors[0] as string[]).slice(3).forEach((title) => newRow.push(currVector[title] ? currVector[title] : ""));
       featureVectors.push(newRow);
     });
     return featureVectors;
