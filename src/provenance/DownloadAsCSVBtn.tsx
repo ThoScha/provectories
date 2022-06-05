@@ -41,7 +41,7 @@ export function DownloadAsCSVBtn({ report, forceUpdate }: { report: Report; forc
         // number arrays will be used as they are
         if (typeof rootAttribute[0] === 'number') {
           columnTitle += "[numerical]";
-          vector.push(...currAttribute as number[]);
+          vector.push(...(currAttribute.length > 0 ? currAttribute as number[] : [0]));
         } else { // string arrays will be encoded
           columnTitle += "[categorical]";
           (rootAttribute as string[]).forEach((root) => {
