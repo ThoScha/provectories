@@ -46,10 +46,21 @@ class Provectories {
 		// asign selected values
 		const visDesc = visuals[toCamelCaseString(title)];
 		if (dataPoints.length > 0) {
-			dataPoints[0].identity.forEach((i: any, idx: number) => {
-				visDesc.selected = { ...visDesc.selected, [i.target.column]: i.equals.toString() };
-				label += `${idx > 0 ? ', ' : ''}${i.target.column}: ${i.equals}`;
+			const selections: { [key: string]: string[] } = {};
+
+			dataPoints.forEach((point: any) => {
+				point.identity.forEach((i: any) => {
+					selections[i.target.column] = [...(selections[i.target.column] ? selections[i.target.column] : []), i.equals];
+				});
 			});
+
+			Object.keys(selections).forEach((key, i) => {
+				label += `${i > 0 ? '. ' : ''}${key}: `;
+				visDesc.selected = { ...visDesc.selected, [key]: Array.from(new Set(selections[key])) };
+				selections[key].forEach((value, j) => {
+					label += `${j > 0 ? ', ' : ''}${value}`;
+				})
+			})
 			return label + ' selected';
 		}
 		visDesc.selected = null;

@@ -6,7 +6,7 @@ export interface IAppState {
   [key: string]: {
     type: string;
     selected: {
-      [key: string]: string;
+      [key: string]: string[];
     } | null;
     visState: IVisState;
   };

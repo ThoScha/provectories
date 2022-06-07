@@ -4,9 +4,11 @@ import { Provenance } from "@visdesignlab/trrack";
 import { provenance } from "./Provectories";
 import { Report } from "powerbi-client";
 import { USER } from "..";
+import { timeout } from "d3";
 
 export function DownloadAsCSVBtn({ report, forceUpdate }: { report: Report; forceUpdate: () => void }) {
   const [prov, setProv] = React.useState<Provenance<IProvectories, string, void> | null>(null);
+  const [downloaded, setDownloaded] = React.useState<boolean>(false);
 
   /*
     Provectories.provenance is an uncontrolled, empty object in the beginning
@@ -45,7 +47,7 @@ export function DownloadAsCSVBtn({ report, forceUpdate }: { report: Report; forc
         } else { // string arrays will be encoded
           columnTitle += "[categorical]";
           (rootAttribute as string[]).forEach((root) => {
-            if (selected && selected[aKey] === root) {// if selected 1 : 0
+            if (selected && selected[aKey]?.includes(root)) {// if selected 1 : 0
               vector.push(1);
               selectedColumns.add(columnTitle);
             } else {
@@ -120,23 +122,30 @@ export function DownloadAsCSVBtn({ report, forceUpdate }: { report: Report; forc
   //  * @param provenance Provenance object to convert to csv
   //  */
   const downloadGraphAsFeatVecCsv = (provenance: Provenance<IProvectories, string, void>): void => {
-    const uri = encodeURI(featureVectorsToCsvString(featureVectorizeGraph(provenance)))
-    const anchor = document.createElement('a');
-    anchor.style.display = 'none';
-    if ("download" in anchor) {
-      anchor.download = `provectories-${USER}-${new Date().getTime()}.csv`;
-      anchor.href = uri;
-      anchor.click();
-    } else {
-      window.open(uri, '_self');
-    }
-    anchor.remove();
+    // timeout to await unfinished async calls
+    timeout(() => {
+      const uri = encodeURI(featureVectorsToCsvString(featureVectorizeGraph(provenance)))
+      const anchor = document.createElement('a');
+      anchor.style.display = 'none';
+      if ("download" in anchor) {
+        anchor.download = `provectories-${USER}-${new Date().getTime()}.csv`;
+        anchor.href = uri;
+        anchor.click();
+      } else {
+        window.open(uri, '_self');
+      }
+      anchor.remove();
+      setDownloaded(true);
+    }, 1500);
   };
 
   return <div style={{ marginLeft: 'auto' }}>
     {prov ?
       <div style={{ marginRight: 0 }}>
-        <button type="button" className="ui button" onClick={() => forceUpdate()}>
+        <button type="button" className="ui button" disabled={!downloaded} onClick={() => {
+          forceUpdate();
+          setDownloaded(false);
+        }}>
           Reset provenance
         </button>
         <button className="ui button" type="button" onClick={() => downloadGraphAsFeatVecCsv(prov)}>
