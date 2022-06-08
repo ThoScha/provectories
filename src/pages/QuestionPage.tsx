@@ -1,8 +1,69 @@
 import * as React from 'react';
+import { IEvaluationQuestion } from '../constants';
+import { NextPageButton } from './NextPageButton';
 
-export function QuestionPage({ children }: { children: React.ReactChild }) {
-    return <div>
-        <h5>Frage 1</h5>
-        {children}
-    </div>
+function QuestionPageRadioButton({ id, title, selected, setSelected }: { id: number, title: string, selected: number, setSelected: (selected: number) => void }) {
+	const htmlFor = title.replaceAll(' ', '');
+	return <>
+		<input
+			type="radio"
+			className="btn-check"
+			onChange={() => setSelected(id)}
+			name="btnradio"
+			id={htmlFor}
+			autoComplete="off"
+			checked={selected === id}
+		/>
+		<label className="btn btn-outline-dark" htmlFor={htmlFor}>{title}</label>
+	</>;
+}
+
+export function QuestionPage({
+	evaluationQuestion,
+	nextPage,
+	children
+}: {
+	evaluationQuestion: IEvaluationQuestion,
+	nextPage: () => void,
+	children: React.ReactChild
+}) {
+	const [selectedAnswer, setSelectedAnswer] = React.useState<number>(-1);
+	const [selectedMentalEffort, setSelectedMentalEffort] = React.useState<number>(-1);
+	const [submitted, setSubmitted] = React.useState<boolean>(false);
+
+	return <div className="ms-2">
+		<header>
+			<h4>Frage {evaluationQuestion.questionId}: {evaluationQuestion.question}</h4>
+		</header>
+		<body className="mt-3">
+			{children}
+		</body>
+		<footer>
+			<div>
+				<h5>Select answer:</h5>
+				<div className="btn-group" role="group" aria-label="Basic radio toggle button group">
+					{evaluationQuestion.answerPossibilites
+						.map((title, i) => <QuestionPageRadioButton id={i} title={title} selected={selectedAnswer} setSelected={setSelectedAnswer} />)
+					}
+				</div>
+				<div>
+					<button onClick={() => setSubmitted(true)} className="btn btn-secondary" disabled={selectedAnswer === -1}>Submit Answer</button>
+				</div>
+			</div>
+			{submitted ? <div>
+				<p>How high would you rate the amount of mental effort invested for completing this task?</p>
+				<div className="btn-group" role="group" aria-label="Basic radio toggle button group">
+					{[1, 2, 3, 4, 5, 6, 7]
+						.map((num) => <QuestionPageRadioButton id={num} title={num.toString()} selected={selectedMentalEffort} setSelected={setSelectedMentalEffort} />)
+					}
+				</div>
+			</div> : null}
+			{selectedMentalEffort !== -1 ? <NextPageButton onButtonClick={() => {
+				setSelectedAnswer(-1);
+				setSelectedMentalEffort(-1);
+				setSubmitted(false);
+				nextPage();
+			}} /> : null}
+		</footer>
+	</div >
 }

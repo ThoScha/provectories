@@ -1,7 +1,6 @@
 import * as React from "react";
 import "./App.css";
-import { Dashboard } from "./Dashboard";
-import { QuestionPage } from "./pages/QuestionPage";
+import { getPage } from "./constants";
 
 export function App() {
 	const [page, setPage] = React.useState<number>(0);
@@ -15,12 +14,7 @@ export function App() {
 			Provectories: New Hires Example
 		</h2>
 		<div>
-			<QuestionPage>
-				<Dashboard />
-			</QuestionPage>
-		</div>
-		<div id="footer">
-			<button type="button" className="ui button" onClick={() => nextPage()}>Next {page}</button>
+			{getPage(nextPage)[page]}
 		</div>
 	</div>;
 }

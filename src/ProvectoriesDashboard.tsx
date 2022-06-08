@@ -12,7 +12,7 @@ import { provectories } from "./provenance/Provectories";
 
 const powerbi = new service.Service(factories.hpmFactory, factories.wpmpFactory, factories.routerFactory);
 
-export function Dashboard() {
+export function ProvectoriesDashboard() {
 	const [embedUrl, setEmbedUrl] = React.useState<string>();
 	const [error, setError] = React.useState<string[]>([]);
 	const reportRef = React.useRef<HTMLDivElement>(null);
@@ -193,7 +193,7 @@ export function Dashboard() {
 
 	const myReport = renderMyReport();
 
-	return <div id="reportContainer" ref={reportRef} style={{ display: 'flex', flex: 1, marginBottom: 5, height: "85vh" }} >
+	return <div id="reportContainer" className="d-flex mb-1" ref={reportRef} style={{ height: "65vh" }} >
 		Loading the report...
 	</div>;
 }

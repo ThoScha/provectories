@@ -139,16 +139,16 @@ export function DownloadAsCSVBtn({ report, forceUpdate }: { report: Report; forc
     }, 1500);
   };
 
-  return <div style={{ marginLeft: 'auto' }}>
+  return <div>
     {prov ?
-      <div style={{ marginRight: 0 }}>
-        <button type="button" className="ui button" disabled={!downloaded} onClick={() => {
+      <div>
+        <button type="button" className="btn btn-secondary" disabled={!downloaded} onClick={() => {
           forceUpdate();
           setDownloaded(false);
         }}>
           Reset provenance
         </button>
-        <button className="ui button" type="button" onClick={() => downloadGraphAsFeatVecCsv(prov)}>
+        <button className="btn btn-secondary" type="button" onClick={() => downloadGraphAsFeatVecCsv(prov)}>
           Download as CSV
         </button>
       </div> : null}
