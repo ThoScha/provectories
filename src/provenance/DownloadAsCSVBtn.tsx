@@ -6,7 +6,7 @@ import { Report } from "powerbi-client";
 import { USER } from "..";
 import { timeout } from "d3";
 
-export function DownloadAsCSVBtn({ report, forceUpdate }: { report: Report; forceUpdate: () => void }) {
+export function DownloadAsCSVBtn({ report }: { report: Report }) {
   const [prov, setProv] = React.useState<Provenance<IProvectories, string, void> | null>(null);
   const [downloaded, setDownloaded] = React.useState<boolean>(false);
 
@@ -142,12 +142,6 @@ export function DownloadAsCSVBtn({ report, forceUpdate }: { report: Report; forc
   return <div>
     {prov ?
       <div>
-        <button type="button" className="btn btn-secondary" disabled={!downloaded} onClick={() => {
-          forceUpdate();
-          setDownloaded(false);
-        }}>
-          Reset provenance
-        </button>
         <button className="btn btn-secondary" type="button" onClick={() => downloadGraphAsFeatVecCsv(prov)}>
           Download as CSV
         </button>

@@ -7,23 +7,30 @@ import * as React from "react";
 import { service, factories, models, IEmbedConfiguration, Report } from "powerbi-client";
 import "./App.css";
 import { provectories } from "./provenance/Provectories";
-import { MainContext } from "./App";
 import * as config from "./Config";
 
 const powerbi = new service.Service(factories.hpmFactory, factories.wpmpFactory, factories.routerFactory);
 
-export function ProvectoriesDashboard() {
-	const { error, embedUrl, accessTokenRef } = React.useContext(MainContext);
-	const reportRef = React.useRef<HTMLDivElement>(null);
+export function ProvectoriesDashboard({ reportRef,
+	error,
+	embedUrl,
+	accessTokenRef
+}: {
+	reportRef: React.MutableRefObject<Report | undefined>,
+	embedUrl: string,
+	error: string[],
+	accessTokenRef: React.MutableRefObject<string>
+}) {
+	const reportContainerRef = React.useRef<HTMLDivElement>(null);
 
 	const renderMyReport = React.useCallback((): Report | undefined => {
 		let report: any | Report = null;
 		if (error.length) {
 			// Cleaning the report container contents and rendering the error message in multiple lines
-			reportRef.current!.textContent = "";
+			reportContainerRef.current!.textContent = "";
 			error.forEach(line => {
-				reportRef.current!.appendChild(document.createTextNode(line));
-				reportRef.current!.appendChild(document.createElement("br"));
+				reportContainerRef.current!.appendChild(document.createTextNode(line));
+				reportContainerRef.current!.appendChild(document.createElement("br"));
 			});
 			console.log('Error', error);
 		} else if (accessTokenRef.current !== "" && embedUrl !== "") { // comment this condition
@@ -48,8 +55,8 @@ export function ProvectoriesDashboard() {
 				}
 			};
 
-			if (reportRef.current) {
-				report = powerbi.embed(reportRef.current, embedConfiguration) as Report;
+			if (reportContainerRef.current) {
+				report = powerbi.embed(reportContainerRef.current, embedConfiguration) as Report;
 
 				// Clear any other loaded handler events
 				report.off("loaded");
@@ -77,20 +84,18 @@ export function ProvectoriesDashboard() {
 		} else {
 			throw Error("No container for the report");
 		}
-	}, [error, embedUrl, accessTokenRef, reportRef]);
-
-	// React function TODO:
-	// componentWillUnmount(): void {
-	// 	powerbi.reset(reportContainer);
-	// }
-
-	// Authenticating to get the access token
+	}, [error, embedUrl, accessTokenRef, reportContainerRef]);
 
 	React.useEffect(() => {
-		renderMyReport();
+		reportRef.current = renderMyReport();
+		return () => {
+			if (reportContainerRef.current) {
+				powerbi.reset(reportContainerRef.current);
+			}
+		}
 	}, [renderMyReport]);
 
-	return <div id="reportContainer" className="d-flex mb-1" ref={reportRef} style={{ height: "65vh" }} >
+	return <div id="reportContainer" className="d-flex mb-1" ref={reportContainerRef} style={{ height: "65vh" }} >
 		Loading the report...
 	</div>;
 }

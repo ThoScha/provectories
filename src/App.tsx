@@ -1,10 +1,16 @@
 import * as React from "react";
 import "./App.css";
-import { getPage } from "./constants";
 import { UserAgentApplication, AuthError, AuthResponse } from "msal";
 import * as config from "./Config";
-
-export const MainContext = React.createContext<{ embedUrl: string, error: string[], accessTokenRef: React.MutableRefObject<string>, setShowNextButton: () => void }>({ embedUrl: '', error: [], accessTokenRef: {} as React.MutableRefObject<string>, setShowNextButton: () => null });
+import { BackgroundQuestionsPage } from "./pages/BackgroundQuestionsPage";
+import { FirstPage } from "./pages/DSGVOPage";
+import { LastPage } from "./pages/LastPage";
+import { QuestionPage } from "./pages/QuestionPage";
+import { SatisfactionQuestionPage } from "./pages/SatisfactionQuestionPage";
+import { EVALUATION_QUESTIONS } from "./constants";
+import { ProvectoriesDashboard } from "./ProvectoriesDashboard";
+import { Report } from "powerbi-client";
+import { provectories } from "./provenance/Provectories";
 
 export function App() {
 	const [page, setPage] = React.useState<number>(0);
@@ -12,6 +18,12 @@ export function App() {
 	const [error, setError] = React.useState<string[]>([]);
 	const [showNextButton, setShowNextButton] = React.useState<boolean>(false);
 	const accessTokenRef = React.useRef<string>('');
+	const userGenderRef = React.useRef<string>('');
+	const userAgeRef = React.useRef<number>(-1);
+	const dashboardExperienceRef = React.useRef<number>(-1);
+	const dashboardConfidenceRef = React.useRef<number>(-1);
+	const dashboardSatisfactionRef = React.useRef<number>(-1);
+	const reportRef = React.useRef<Report>();
 
 	const nextPage = () => {
 		setPage((prevState) => prevState + 1);
@@ -122,16 +134,57 @@ export function App() {
 		}
 	}, [config, authenticate]);
 
-	return <MainContext.Provider value={React.useMemo(() => ({ embedUrl, error, accessTokenRef, setShowNextButton: () => setShowNextButton(true) }), [embedUrl, error, accessTokenRef, setShowNextButton])}>
+	const pages: { [page: number]: React.ReactNode } = React.useMemo<{ [page: number]: React.ReactNode }>(() => ({
+		0: <FirstPage setShowNextButton={setShowNextButton} />,
+		1: <BackgroundQuestionsPage
+			dashboardConfidenceRef={dashboardConfidenceRef}
+			dashboardExperienceRef={dashboardExperienceRef}
+			userAgeRef={userAgeRef}
+			userGenderRef={userGenderRef}
+			setShowNextButton={setShowNextButton}
+		/>,
+		2: <QuestionPage evaluationQuestion={EVALUATION_QUESTIONS[0]} setShowNextButton={setShowNextButton}>
+			<ProvectoriesDashboard
+				reportRef={reportRef}
+				accessTokenRef={accessTokenRef}
+				embedUrl={embedUrl}
+				error={error}
+
+			/>
+		</QuestionPage>,
+		3: <QuestionPage evaluationQuestion={EVALUATION_QUESTIONS[1]} setShowNextButton={setShowNextButton}>
+			<ProvectoriesDashboard
+				reportRef={reportRef}
+				accessTokenRef={accessTokenRef}
+				embedUrl={embedUrl}
+				error={error}
+			/>
+		</QuestionPage>,
+		4: <SatisfactionQuestionPage
+			dashboardSatisfactionRef={dashboardSatisfactionRef}
+			setShowNextButton={setShowNextButton}
+		/>,
+		5: <LastPage
+			dashboardConfidenceRef={dashboardConfidenceRef}
+			dashboardExperienceRef={dashboardExperienceRef}
+			userAgeRef={userAgeRef}
+			userGenderRef={userGenderRef}
+			dashboardSatisfactionRef={dashboardSatisfactionRef}
+			reportRef={reportRef}
+		/>
+	}), [EVALUATION_QUESTIONS, page]);
+
+	return (
 		<div>
-			<h2 id="title">
+			<h2 id="title" className="m-0 p-1">
 				Provectories: New Hires Example
 			</h2>
-			<div className="card m-1 overflow-auto" style={{ height: '85vh' }}>
+			<div className="card m-1 overflow-auto" style={{ height: '88vh' }}>
 				<div className="card-body">
-					{getPage()[page]}
+					{pages[page]}
 				</div>
 			</div>
-			{showNextButton ? <button type="button" className="btn btn-primary" onClick={() => nextPage()}>Next</button> : null}
-		</div></MainContext.Provider>;
+			{showNextButton ? <button type="button" style={{ width: '12vh' }} className="btn btn-primary float-end me-1" onClick={() => nextPage()}>Next</button> : null}
+		</div>
+	);
 }

@@ -1,60 +1,57 @@
 import * as React from 'react';
-import { MainContext } from '../App';
 import { IEvaluationQuestion } from '../constants';
-
-function QuestionPageRadioButton({ id, title, selected, setSelected }: { id: number, title: string, selected: number, setSelected: (selected: number) => void }) {
-	const htmlFor = title.replaceAll(' ', '');
-	return <>
-		<input
-			type="radio"
-			className="btn-check"
-			onChange={() => setSelected(id)}
-			name="btnradio"
-			id={htmlFor}
-			autoComplete="off"
-			checked={selected === id}
-		/>
-		<label className="btn btn-outline-dark" htmlFor={htmlFor}>{title}</label>
-	</>;
-}
+import { PageRadioButton } from './PageRadioButton';
 
 export function QuestionPage({
 	evaluationQuestion,
+	setShowNextButton,
 	children
 }: {
-	evaluationQuestion: IEvaluationQuestion,
-	children: React.ReactChild
+	evaluationQuestion: IEvaluationQuestion;
+	setShowNextButton: (showNextButton: boolean) => void;
+	children: React.ReactChild;
 }) {
 	const [selectedAnswer, setSelectedAnswer] = React.useState<number>(-1);
 	const [selectedMentalEffort, setSelectedMentalEffort] = React.useState<number>(-1);
-	const [submitted, setSubmitted] = React.useState<boolean>(false);
-	const { setShowNextButton } = React.useContext(MainContext);
+
+	React.useEffect(() => {
+		setSelectedAnswer(-1);
+		setSelectedMentalEffort(-1);
+	}, [evaluationQuestion.questionId]);
 
 	return <div className="ms-2">
 		<div className="my-3">
 			{children}
 		</div>
 		<div>
-			<div>
-				<h4>Frage {evaluationQuestion.questionId}: {evaluationQuestion.question}</h4>
-				<div className="btn-group" role="group" aria-label="Basic radio toggle button group">
-					{evaluationQuestion.answerPossibilites
-						.map((title, i) => <QuestionPageRadioButton id={i} title={title} selected={selectedAnswer} setSelected={setSelectedAnswer} />)
-					}
+			<div className="row">
+				<div className="col-6">
+					<p>Frage {evaluationQuestion.questionId}: {evaluationQuestion.question}</p>
 				</div>
-				<div>
-					<button onClick={() => setSubmitted(true)} className="btn btn-secondary" disabled={selectedAnswer === -1}>Submit Answer</button>
+				<div className="col-6">
+					<div className="btn-group w-100" role="group" aria-label="Basic radio toggle button group">
+						{evaluationQuestion.answerPossibilites
+							.map((title, i) => <PageRadioButton<number> radioButtonId={i} title={title} selected={selectedAnswer} setSelected={setSelectedAnswer} />)
+						}
+					</div>
 				</div>
 			</div>
-			{submitted ? <div>
-				<p>How high would you rate the amount of mental effort invested for completing this task?</p>
-				<div className="btn-group" role="group" aria-label="Basic radio toggle button group">
-					{[1, 2, 3, 4, 5, 6, 7]
-						.map((num) => <QuestionPageRadioButton id={num} title={num.toString()} selected={selectedMentalEffort} setSelected={(selected: number) => {
-							setSelectedMentalEffort(selected);
-							setShowNextButton();
-						}} />)
-					}
+			{selectedAnswer !== -1 ? <div className="mt-3 row">
+				<div className="col-6">
+					<p>How high would you rate the amount of mental effort invested for completing this task?</p>
+				</div>
+				<div className="col-6">
+					<div className="btn-group w-100" role="group" aria-label="Basic radio toggle button group">
+						{[1, 2, 3, 4, 5, 6]
+							.map((num) => <PageRadioButton<number> radioButtonId={num} title={num.toString()} selected={selectedMentalEffort} setSelected={(selected: number) => {
+								setSelectedMentalEffort(selected);
+								setShowNextButton(true);
+							}} />)
+						}
+					</div>
+					<div className="d-flex justify-content-between text-muted">
+						<i>1 - very low mental effort</i><i>6 - very high mental efford</i>
+					</div>
 				</div>
 			</div> : null}
 		</div>

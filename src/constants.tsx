@@ -1,10 +1,3 @@
-import { Dashboard } from "dashboard";
-import React from "react";
-import { BackgroundQuestionsPage } from "./pages/BackgroundQuestionsPage";
-import { FirstPage } from "./pages/DSGVOPage";
-import { QuestionPage } from "./pages/QuestionPage";
-import { ProvectoriesDashboard } from "./ProvectoriesDashboard";
-
 export interface IEvaluationQuestion {
 	questionId: number;
 	taskId: number;
@@ -26,13 +19,3 @@ export const EVALUATION_QUESTIONS: IEvaluationQuestion[] = [
 		answerPossibilites: ['1021', '103', '5087', '859']
 	}
 ];
-
-export function getPage(): { [page: number]: React.ReactNode } {
-	return {
-		0: <FirstPage />,
-		1: <BackgroundQuestionsPage />,
-		2: <QuestionPage evaluationQuestion={EVALUATION_QUESTIONS[0]}><ProvectoriesDashboard /></QuestionPage>,
-		3: <QuestionPage evaluationQuestion={EVALUATION_QUESTIONS[1]}><ProvectoriesDashboard /></QuestionPage>
-	};
-}
-
