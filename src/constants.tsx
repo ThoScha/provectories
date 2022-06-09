@@ -27,12 +27,12 @@ export const EVALUATION_QUESTIONS: IEvaluationQuestion[] = [
 	}
 ];
 
-export function getPage(nextPage: () => void): { [page: number]: React.ReactNode } {
+export function getPage(): { [page: number]: React.ReactNode } {
 	return {
-		0: <FirstPage nextPage={nextPage} />,
-		1: <BackgroundQuestionsPage nextPage={nextPage} />,
-		2: <QuestionPage evaluationQuestion={EVALUATION_QUESTIONS[0]} nextPage={nextPage}><ProvectoriesDashboard /></QuestionPage>,
-		3: <QuestionPage evaluationQuestion={EVALUATION_QUESTIONS[1]} nextPage={nextPage}><ProvectoriesDashboard /></QuestionPage>
+		0: <FirstPage />,
+		1: <BackgroundQuestionsPage />,
+		2: <QuestionPage evaluationQuestion={EVALUATION_QUESTIONS[0]}><ProvectoriesDashboard /></QuestionPage>,
+		3: <QuestionPage evaluationQuestion={EVALUATION_QUESTIONS[1]}><ProvectoriesDashboard /></QuestionPage>
 	};
 }
 

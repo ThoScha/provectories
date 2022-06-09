@@ -1,6 +1,6 @@
 import * as React from 'react';
+import { MainContext } from '../App';
 import { IEvaluationQuestion } from '../constants';
-import { NextPageButton } from './NextPageButton';
 
 function QuestionPageRadioButton({ id, title, selected, setSelected }: { id: number, title: string, selected: number, setSelected: (selected: number) => void }) {
 	const htmlFor = title.replaceAll(' ', '');
@@ -20,27 +20,23 @@ function QuestionPageRadioButton({ id, title, selected, setSelected }: { id: num
 
 export function QuestionPage({
 	evaluationQuestion,
-	nextPage,
 	children
 }: {
 	evaluationQuestion: IEvaluationQuestion,
-	nextPage: () => void,
 	children: React.ReactChild
 }) {
 	const [selectedAnswer, setSelectedAnswer] = React.useState<number>(-1);
 	const [selectedMentalEffort, setSelectedMentalEffort] = React.useState<number>(-1);
 	const [submitted, setSubmitted] = React.useState<boolean>(false);
+	const { setShowNextButton } = React.useContext(MainContext);
 
 	return <div className="ms-2">
-		<header>
-			<h4>Frage {evaluationQuestion.questionId}: {evaluationQuestion.question}</h4>
-		</header>
-		<body className="mt-3">
+		<div className="my-3">
 			{children}
-		</body>
-		<footer>
+		</div>
+		<div>
 			<div>
-				<h5>Select answer:</h5>
+				<h4>Frage {evaluationQuestion.questionId}: {evaluationQuestion.question}</h4>
 				<div className="btn-group" role="group" aria-label="Basic radio toggle button group">
 					{evaluationQuestion.answerPossibilites
 						.map((title, i) => <QuestionPageRadioButton id={i} title={title} selected={selectedAnswer} setSelected={setSelectedAnswer} />)
@@ -54,16 +50,13 @@ export function QuestionPage({
 				<p>How high would you rate the amount of mental effort invested for completing this task?</p>
 				<div className="btn-group" role="group" aria-label="Basic radio toggle button group">
 					{[1, 2, 3, 4, 5, 6, 7]
-						.map((num) => <QuestionPageRadioButton id={num} title={num.toString()} selected={selectedMentalEffort} setSelected={setSelectedMentalEffort} />)
+						.map((num) => <QuestionPageRadioButton id={num} title={num.toString()} selected={selectedMentalEffort} setSelected={(selected: number) => {
+							setSelectedMentalEffort(selected);
+							setShowNextButton();
+						}} />)
 					}
 				</div>
 			</div> : null}
-			{selectedMentalEffort !== -1 ? <NextPageButton onButtonClick={() => {
-				setSelectedAnswer(-1);
-				setSelectedMentalEffort(-1);
-				setSubmitted(false);
-				nextPage();
-			}} /> : null}
-		</footer>
+		</div>
 	</div >
 }

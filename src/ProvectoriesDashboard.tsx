@@ -4,21 +4,19 @@
 // ----------------------------------------------------------------------------
 
 import * as React from "react";
-import { UserAgentApplication, AuthError, AuthResponse } from "msal";
 import { service, factories, models, IEmbedConfiguration, Report } from "powerbi-client";
 import "./App.css";
-import * as config from "./Config";
 import { provectories } from "./provenance/Provectories";
+import { MainContext } from "./App";
+import * as config from "./Config";
 
 const powerbi = new service.Service(factories.hpmFactory, factories.wpmpFactory, factories.routerFactory);
 
 export function ProvectoriesDashboard() {
-	const [embedUrl, setEmbedUrl] = React.useState<string>();
-	const [error, setError] = React.useState<string[]>([]);
+	const { error, embedUrl, accessTokenRef } = React.useContext(MainContext);
 	const reportRef = React.useRef<HTMLDivElement>(null);
-	const accessTokenRef = React.useRef<string>();
 
-	const renderMyReport = (): Report | undefined => {
+	const renderMyReport = React.useCallback((): Report | undefined => {
 		let report: any | Report = null;
 		if (error.length) {
 			// Cleaning the report container contents and rendering the error message in multiple lines
@@ -79,7 +77,7 @@ export function ProvectoriesDashboard() {
 		} else {
 			throw Error("No container for the report");
 		}
-	}
+	}, [error, embedUrl, accessTokenRef, reportRef]);
 
 	// React function TODO:
 	// componentWillUnmount(): void {
@@ -87,111 +85,10 @@ export function ProvectoriesDashboard() {
 	// }
 
 	// Authenticating to get the access token
-	const authenticate = () => {
-		const msalConfig = {
-			auth: {
-				clientId: config.clientId
-			}
-		};
-
-		const loginRequest = {
-			scopes: config.scopes
-		};
-
-		const msalInstance: UserAgentApplication = new UserAgentApplication(msalConfig);
-
-		const successCallback = (response: AuthResponse) => {
-
-			if (response.tokenType === "id_token") {
-				authenticate();
-			} else if (response.tokenType === "access_token") {
-				accessTokenRef.current = response.accessToken;
-				getembedUrl();
-			} else {
-				setError([("Token type is: " + response.tokenType)])
-			}
-		}
-
-		const failCallBack = (error: AuthError) => {
-			setError(["Redirect error: " + error]);
-		};
-
-		msalInstance.handleRedirectCallback(successCallback, failCallBack);
-
-		// check if there is a cached user
-		if (msalInstance.getAccount()) {
-			// get access token silently from cached id-token
-			msalInstance.acquireTokenSilent(loginRequest)
-				.then((response: AuthResponse) => {
-					// get access token from response: response.accessToken
-					accessTokenRef.current = response.accessToken;
-					getembedUrl();
-				})
-				.catch((err: AuthError) => {
-
-					// refresh access token silently from cached id-token
-					// makes the call to handleredirectcallback
-					if (err.name === "InteractionRequiredAuthError") {
-						msalInstance.acquireTokenRedirect(loginRequest);
-					}
-					else {
-						setError([err.toString()]);
-					}
-				});
-		} else {
-			// user is not logged in or cached, you will need to log them in to acquire a token
-			msalInstance.loginRedirect(loginRequest);
-		}
-	}
-
-	// Power BI REST API call to get the embed URL of the report
-	const getembedUrl = () => {
-		fetch("https://api.powerbi.com/v1.0/myorg/groups/" + config.workspaceId + "/reports/" + config.reportId, {
-			headers: {
-				"Authorization": "Bearer " + accessTokenRef.current
-			},
-			method: "GET"
-		})
-			.then(function (response) {
-				const errorMessage: string[] = [];
-				errorMessage.push("Error occurred while fetching the embed URL of the report")
-				errorMessage.push("Request Id: " + response.headers.get("requestId"));
-
-				response.json()
-					.then((body) => {
-						// Successful response
-						if (response.ok) {
-							// setAccessToken(accessToken);
-							setEmbedUrl(body["embedUrl"]);
-						}
-						// If error message is available
-						else {
-							errorMessage.push("Error " + response.status + ": " + body.error.code);
-							setError(errorMessage);
-						}
-					})
-					.catch(function () {
-						errorMessage.push("Error " + response.status + ":  An error has occurred");
-						setError(errorMessage);
-					});
-			})
-			.catch(function (error) {
-				// Error in making the API call
-				setError(error);
-			});
-	};
 
 	React.useEffect(() => {
-		// User input - null check
-		if (config.workspaceId === "" || config.reportId === "") {
-			setError(["Please assign values to workspace Id and report Id in Config.ts file"]);
-		} else {
-			// Authenticate the user and generate the access token
-			authenticate();
-		}
-	}, []);
-
-	const myReport = renderMyReport();
+		renderMyReport();
+	}, [renderMyReport]);
 
 	return <div id="reportContainer" className="d-flex mb-1" ref={reportRef} style={{ height: "65vh" }} >
 		Loading the report...
