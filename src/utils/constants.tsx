@@ -49,14 +49,14 @@ const lastEvaluationQuestions: IEvaluationQuestion[] = [
 	{
 		questionId: 7,
 		taskId: 4,
-		question: 'Find out the month with the most part-time hires over all years? Answer with month and year.',
+		question: 'Find out the month with the most part-time hires comparing all years? Answer with month and year.',
 		answerPossibilites: { 1: 'Oct 2013', 2: 'Jun 2014', 3: 'Nov 2012', 4: 'Sept 2014' },
 		correctAnswerId: 4
 	},
 	{
 		questionId: 8,
 		taskId: 4,
-		question: 'Comparing 2011 and 2012: What region had at least one month in which the new hires were lower in 2012 than in 2011.',
+		question: 'Comparing 2011 and 2012, what region had at least one month in which the new hires were lower in 2012 than in 2011.',
 		answerPossibilites: { 1: 'West', 2: 'South', 3: 'Northwest', 4: 'East' },
 		correctAnswerId: 2
 	}

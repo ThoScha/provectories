@@ -11,7 +11,7 @@ import { EVALUATION_QUESTIONS } from "./utils/constants";
 import { Report } from "powerbi-client";
 import { provenance } from "./provenance/Provectories";
 import { ICurrentQuestion, IQuestionProvenance } from "./utils/interfaces";
-import * as _ from "lodash";
+import _ from "lodash";
 
 const USER: string = uuid();
 
@@ -32,20 +32,29 @@ export function App() {
 	const currentQuestionRef = React.useRef<ICurrentQuestion | null>(null);
 	const questionProvanencesRef = React.useRef<IQuestionProvenance[]>([]);
 
-	const nextPage = () => {
-		// avoids second click in case to csv-string took longer
+	const onNextPageButtonClick = async () => {
 		setDisableNExtButton(true);
+		// only set in question pages
 		if (currentQuestionRef.current) {
-			questionProvanencesRef.current.push({
-				...currentQuestionRef.current,
-				provenance: _.cloneDeep(provenance),
-				endtime: new Date().getTime()
+			// wait for background async provenance track calls to be finished
+			await new Promise((resolve) => {
+				setTimeout(() => {
+					//checkin again bc this could be null already
+					if (currentQuestionRef.current) {
+						questionProvanencesRef.current.push({
+							...currentQuestionRef.current,
+							provenance: _.cloneDeep(provenance),
+							endtime: new Date().getTime()
+						});
+					}
+					currentQuestionRef.current = null;
+					resolve(1);
+				}, 1500)
 			});
 		}
 		if (age > 0 && gender.length > 0 && experience.length > 0) {
 			setQuestionCount((prevState) => prevState + 1);
 		}
-		currentQuestionRef.current = null;
 		setPage((prevState) => prevState + 1);
 		setShowNextButton(false);
 		setDisableNExtButton(false);
@@ -230,12 +239,12 @@ export function App() {
 				{showNextButton ?
 					<button
 						className="btn btn-primary"
-						onClick={() => nextPage()}
+						onClick={() => onNextPageButtonClick()}
 						disabled={disableNextButton}
 						type="button"
 						style={{ width: '12vh' }}
 					>
-						Next
+						{disableNextButton ? 'Loading...' : 'Next'}
 					</button>
 					: null}
 			</div>

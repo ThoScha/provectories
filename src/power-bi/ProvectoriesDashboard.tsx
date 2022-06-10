@@ -76,12 +76,10 @@ export function ProvectoriesDashboard({
 				// Below patch of code is for handling errors that occur during embedding
 				report.on("error", function (event: any) {
 					const errorMsg = event.detail;
-
 					// Use errorMsg variable to log error in any destination of choice
 					console.error(errorMsg);
 				});
 			}
-
 			return report;
 		} else {
 			throw Error("No container for the report");
