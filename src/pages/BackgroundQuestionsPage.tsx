@@ -2,38 +2,44 @@ import React from "react";
 import { PageRadioButton } from "./PageRadioButton";
 
 export function BackgroundQuestionsPage({
-	userGenderRef,
-	userAgeRef,
-	dashboardExperienceRef,
-	dashboardConfidenceRef,
+	age,
+	gender,
+	experience,
+	confidence,
+	setAge,
+	setGender,
+	setExperience,
+	setConfidence,
 	setShowNextButton
 }: {
-	userGenderRef: React.MutableRefObject<string>;
-	userAgeRef: React.MutableRefObject<number>;
-	dashboardExperienceRef: React.MutableRefObject<number>;
-	dashboardConfidenceRef: React.MutableRefObject<number>;
+	age: number;
+	gender: string;
+	experience: string;
+	confidence: number;
+	setAge: (age: number) => void;
+	setGender: (gender: string) => void;
+	setExperience: (experience: string) => void;
+	setConfidence: (confidence: number) => void;
 	setShowNextButton: (showNextButton: boolean) => void;
 }) {
-	const [gender, setGender] = React.useState<string>('');
-	const [age, setAge] = React.useState<number>(0);
-	const [confidence, setConfidence] = React.useState<number>(-1);
-	const [experience, setExperience] = React.useState<string>('');
 
 	React.useEffect(() => {
 		if (gender.length > 0 && age > 0 && ((confidence !== -1 && experience === 'Yes') || (experience === 'No'))) {
-			userGenderRef.current = gender;
-			userAgeRef.current = age;
-			dashboardExperienceRef.current = experience === 'No' ? 0 : 1;
-			dashboardConfidenceRef.current = confidence;
 			setShowNextButton(true);
 		} else {
 			setShowNextButton(false);
 		}
 		if (experience === 'No') {
 			setConfidence(-1);
-			dashboardConfidenceRef.current = -1;
 		}
-	}, [gender, age, confidence, experience]);
+	}, [
+		gender,
+		age,
+		confidence,
+		experience,
+		setConfidence,
+		setShowNextButton
+	]);
 
 	return <div>
 		<h3 className="mb-4">Demographic Information</h3>
@@ -46,7 +52,13 @@ export function BackgroundQuestionsPage({
 			<div className="col-4">
 				<div className="btn-group w-100" role="group" aria-label="gender-radio-button-group">
 					{(['m', 'w', 'd'])
-						.map((gen) => <PageRadioButton<string> radioButtonId={gen} title={gen} selected={gender} setSelected={setGender} />)
+						.map((gen) => <PageRadioButton<string>
+							key={`gender-radio-button-${gen}`}
+							radioButtonId={gen}
+							title={gen}
+							selected={gender}
+							setSelected={setGender}
+						/>)
 					}
 				</div>
 			</div>
@@ -56,7 +68,13 @@ export function BackgroundQuestionsPage({
 			<div className="col-4">
 				<div className="btn-group w-100" role="group" aria-label="experience-radio-button-group">
 					{['Yes', 'No']
-						.map((label) => <PageRadioButton<string> radioButtonId={label} title={label} selected={experience} setSelected={setExperience} />)
+						.map((label) => <PageRadioButton<string>
+							key={`experience-radio-button-${label}`}
+							radioButtonId={label}
+							title={label}
+							selected={experience}
+							setSelected={setExperience}
+						/>)
 					}
 				</div>
 			</div>
@@ -67,7 +85,13 @@ export function BackgroundQuestionsPage({
 				<div className="col-4">
 					<div className="btn-group w-100" role="group" aria-label="confidence-radio-button-group">
 						{[1, 2, 3, 4, 5, 6]
-							.map((num) => <PageRadioButton<number> radioButtonId={num} title={String(num)} selected={confidence} setSelected={setConfidence} />)
+							.map((num) => <PageRadioButton<number>
+								key={`confidence-radio-button-${num}`}
+								radioButtonId={num}
+								title={String(num)}
+								selected={confidence}
+								setSelected={setConfidence}
+							/>)
 						}
 					</div>
 					<div className="d-flex justify-content-between text-muted">

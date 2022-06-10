@@ -2,6 +2,8 @@ import { Report } from "report";
 import { IReportBookmark, IExportDataResult } from "powerbi-models";
 import { models, VisualDescriptor } from "powerbi-client";
 import 'powerbi-report-authoring';
+import { IAppState, IExportFeatureVectorRow, IFeatureVector, IProvectories } from "./interfaces";
+import { Provenance } from "@visdesignlab/trrack/dist/Types/Provenance";
 
 /**
  * Captures and returns current bookmark
@@ -117,9 +119,103 @@ export async function getCurrentVisuals(report: Report): Promise<VisualDescripto
 		return report
 			.getPages().then(async (pages) => pages.filter((page) => page.isActive)[0]
 				.getVisuals().then((visuals) => visuals
-					.filter((v) => v.type !== 'card' && v.type !== 'shape')));
+					.filter((v) => v.type !== 'card' && v.type !== 'shape' && v.type !== 'textbox')));
 	} catch (err) {
 		console.error(err);
 		return [];
 	}
+}
+
+/**
+	* Takes an appState and encodes it as a feature vector. Needs initial app state to know if an attribute is filtered
+	* @param currState State to encode as a feature vector
+	* @param rootState Initial app state
+	*/
+export function appStateToFeatureVector(currState: IAppState, rootState: IAppState): IFeatureVector {
+	const featureVector: IFeatureVector = {};
+	const selectedColumns = new Set<string>();
+	const filteredColumns = new Set<string>();
+	Object.keys(rootState).forEach((vKey) => {
+		const { visState, selected, type } = currState[vKey];
+		const rootVisState = rootState[vKey].visState;
+		Object.keys(rootVisState).forEach((aKey) => {
+			const rootAttribute = rootVisState[aKey];
+			const currAttribute = visState[aKey];
+			let columnTitle = vKey + '.' + aKey;
+			const vector = [] as number[];
+			// number arrays will be used as they are
+			if (typeof rootAttribute[0] === 'number') {
+				columnTitle += "<numerical>";
+				vector.push(...(currAttribute.length > 0 ? currAttribute as number[] : [0]));
+			} else { // string arrays will be encoded
+				columnTitle += "<categorical>";
+				(rootAttribute as string[]).forEach((root) => {
+					if (selected && selected[aKey]?.includes(root)) {// if selected 1 : 0
+						vector.push(1);
+						selectedColumns.add(columnTitle);
+					} else {
+						vector.push(0)
+					}
+					if (type !== 'slicer') { // slicers can't be filtered
+						if ((currAttribute as string[]).includes(root)) { // if filtered then 1 (included = !filtered)
+							vector.push(0);
+						} else {
+							vector.push(1);
+							filteredColumns.add(columnTitle);
+						}
+					}
+				});
+			}
+			featureVector[columnTitle] = vector;
+		});
+	});
+
+	return { selectedValues: Array.from(selectedColumns).join(", ") || "", filteredValues: Array.from(filteredColumns).join(", ") || "", ...featureVector };
+};
+
+/**
+ * Goes through graph, returns feature vector row for each node and returns feature vector matrix
+ * @param provenance Provenance object to featurize
+ */
+export function featureVectorizeGraph(provenance: Provenance<IProvectories, string, void>, addCols: { [title: string]: string | number } = {}): IExportFeatureVectorRow[] {
+	const { root, graph } = provenance;
+	const featureVectors: IExportFeatureVectorRow[] = [];
+
+	Object.keys(graph.nodes).forEach((key) => {
+		const currNode = graph.nodes[key];
+		const currVector = appStateToFeatureVector(
+			provenance.getState(currNode.id).appState, provenance.getState(root.id).appState
+		);
+		// adding header row
+		if (key === root.id) {
+			featureVectors.push(['timestamp', ...Object.keys(addCols), 'triggeredAction', ...Object.keys(currVector)]);
+		}
+		const newRow: IExportFeatureVectorRow = [currNode.metadata.createdOn || -1, ...Object.values(addCols), currNode.label];
+		// skip first column since time is no key in feature vector
+		(featureVectors[0] as string[]).slice(3 + Object.keys(addCols).length).forEach((title) => newRow.push(currVector[title] ? currVector[title] : ""));
+		featureVectors.push(newRow);
+	});
+	return featureVectors;
+}
+
+/**
+ * Takes feature vector matrix and converts it to a csv-string
+ * @param exportFeatureVectorRows Feature vector matrix
+ */
+export function featureVectorsToCsvString(exportFeatureVectorRows: IExportFeatureVectorRow[]): string {
+	let csvString = 'data:text/csv;charset=utf-8,';
+	exportFeatureVectorRows.forEach((row, idx) => {
+		if (idx === 0) {
+			csvString += row.join(';') + '\r\n';
+		} else {
+			(row as IExportFeatureVectorRow).forEach((cell, i) => {
+				let newString = typeof cell === "string" ? cell : JSON.stringify(cell);
+				// removes brackets
+				newString = newString.replaceAll('[', '').replaceAll(']', '');
+				csvString += newString;
+				csvString += i < row.length - 1 ? ';' : '\r\n'
+			});
+		}
+	});
+	return csvString;
 }

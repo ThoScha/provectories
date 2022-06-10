@@ -1,6 +1,7 @@
 import * as React from "react";
 import "./App.css";
 import { UserAgentApplication, AuthError, AuthResponse } from "msal";
+import { v4 as uuid } from 'uuid';
 import * as config from "./Config";
 import { BackgroundQuestionsPage } from "./pages/BackgroundQuestionsPage";
 import { FirstPage } from "./pages/DSGVOPage";
@@ -8,26 +9,44 @@ import { LastPage } from "./pages/LastPage";
 import { QuestionPage } from "./pages/QuestionPage";
 import { SatisfactionQuestionPage } from "./pages/SatisfactionQuestionPage";
 import { EVALUATION_QUESTIONS } from "./constants";
-import { ProvectoriesDashboard } from "./ProvectoriesDashboard";
 import { Report } from "powerbi-client";
-import { provectories } from "./provenance/Provectories";
+import { featureVectorizeGraph } from "./provenance/utils";
+import { provenance } from "./provenance/Provectories";
+import { ICurrentQuestion, yolo } from "./provenance/interfaces";
+
+const USER: string = uuid();
 
 export function App() {
 	const [page, setPage] = React.useState<number>(0);
 	const [embedUrl, setEmbedUrl] = React.useState<string>('');
 	const [error, setError] = React.useState<string[]>([]);
 	const [showNextButton, setShowNextButton] = React.useState<boolean>(false);
+	const [disableNextButton, setDisableNExtButton] = React.useState<boolean>(false);
+	const [age, setAge] = React.useState<number>(0);
+	const [gender, setGender] = React.useState<string>('')
+	const [experience, setExperience] = React.useState<string>('');
+	const [confidence, setConfidence] = React.useState<number>(-1);
+	const [satisfaction, setSatisfaction] = React.useState<number>(-1);
 	const accessTokenRef = React.useRef<string>('');
-	const userGenderRef = React.useRef<string>('');
-	const userAgeRef = React.useRef<number>(-1);
-	const dashboardExperienceRef = React.useRef<number>(-1);
-	const dashboardConfidenceRef = React.useRef<number>(-1);
-	const dashboardSatisfactionRef = React.useRef<number>(-1);
 	const reportRef = React.useRef<Report>();
+	const currentQuestionRef = React.useRef<ICurrentQuestion | null>(null);
+	const yoloRef = React.useRef<yolo[]>([]);
 
 	const nextPage = () => {
+		// avoids second click in case to csv-string took longer
+		setDisableNExtButton(true);
+		if (currentQuestionRef.current) {
+			yoloRef.current.push({
+				...currentQuestionRef.current,
+				provenance: Object.create(provenance),
+				endtime: new Date().getTime()
+			});
+			featureVectorizeGraph(Object.create(provenance));
+		}
+		currentQuestionRef.current = null;
 		setPage((prevState) => prevState + 1);
 		setShowNextButton(false);
+		setDisableNExtButton(false);
 	};
 
 	// Power BI REST API call to get the embed URL of the report
@@ -65,7 +84,7 @@ export function App() {
 				// Error in making the API call
 				setError(error);
 			});
-	}, [accessTokenRef, config]);
+	}, [accessTokenRef]);
 
 	const authenticate = React.useCallback(() => {
 		const msalConfig = {
@@ -132,47 +151,68 @@ export function App() {
 			// Authenticate the user and generate the access token
 			authenticate();
 		}
-	}, [config, authenticate]);
+	}, [authenticate]);
 
 	const pages: { [page: number]: React.ReactNode } = React.useMemo<{ [page: number]: React.ReactNode }>(() => ({
 		0: <FirstPage setShowNextButton={setShowNextButton} />,
 		1: <BackgroundQuestionsPage
-			dashboardConfidenceRef={dashboardConfidenceRef}
-			dashboardExperienceRef={dashboardExperienceRef}
-			userAgeRef={userAgeRef}
-			userGenderRef={userGenderRef}
+			age={age}
+			gender={gender}
+			experience={experience}
+			confidence={confidence}
+			setAge={setAge}
+			setGender={setGender}
+			setExperience={setExperience}
+			setConfidence={setConfidence}
 			setShowNextButton={setShowNextButton}
 		/>,
-		2: <QuestionPage evaluationQuestion={EVALUATION_QUESTIONS[0]} setShowNextButton={setShowNextButton}>
-			<ProvectoriesDashboard
-				reportRef={reportRef}
-				accessTokenRef={accessTokenRef}
-				embedUrl={embedUrl}
-				error={error}
-
-			/>
-		</QuestionPage>,
-		3: <QuestionPage evaluationQuestion={EVALUATION_QUESTIONS[1]} setShowNextButton={setShowNextButton}>
-			<ProvectoriesDashboard
-				reportRef={reportRef}
-				accessTokenRef={accessTokenRef}
-				embedUrl={embedUrl}
-				error={error}
-			/>
-		</QuestionPage>,
+		2: <QuestionPage
+			evaluationQuestion={EVALUATION_QUESTIONS[0]}
+			reportRef={reportRef}
+			accessTokenRef={accessTokenRef}
+			currentQuestionRef={currentQuestionRef}
+			embedUrl={embedUrl}
+			error={error}
+			setShowNextButton={setShowNextButton}
+		/>,
+		3: <QuestionPage
+			evaluationQuestion={EVALUATION_QUESTIONS[1]}
+			reportRef={reportRef}
+			accessTokenRef={accessTokenRef}
+			currentQuestionRef={currentQuestionRef}
+			embedUrl={embedUrl}
+			error={error}
+			setShowNextButton={setShowNextButton}
+		/>,
 		4: <SatisfactionQuestionPage
-			dashboardSatisfactionRef={dashboardSatisfactionRef}
+			satisfaction={satisfaction}
+			setSatisfaction={setSatisfaction}
 			setShowNextButton={setShowNextButton}
 		/>,
 		5: <LastPage
-			dashboardConfidenceRef={dashboardConfidenceRef}
-			dashboardExperienceRef={dashboardExperienceRef}
-			userAgeRef={userAgeRef}
-			userGenderRef={userGenderRef}
-			dashboardSatisfactionRef={dashboardSatisfactionRef}
-			reportRef={reportRef}
+			yoloRef={yoloRef}
+			age={age}
+			gender={gender}
+			experience={experience}
+			confidence={confidence}
+			satisfaction={satisfaction}
+			user={USER}
 		/>
-	}), [EVALUATION_QUESTIONS, page]);
+	}), [
+		age,
+		gender,
+		experience,
+		confidence,
+		satisfaction,
+		embedUrl,
+		error,
+		setAge,
+		setGender,
+		setConfidence,
+		setExperience,
+		setSatisfaction,
+		setShowNextButton
+	]);
 
 	return (
 		<div>
@@ -184,7 +224,17 @@ export function App() {
 					{pages[page]}
 				</div>
 			</div>
-			{showNextButton ? <button type="button" style={{ width: '12vh' }} className="btn btn-primary float-end me-1" onClick={() => nextPage()}>Next</button> : null}
+			{showNextButton ?
+				<button
+					className="btn btn-primary float-end me-1"
+					onClick={() => nextPage()}
+					disabled={disableNextButton}
+					type="button"
+					style={{ width: '12vh' }}
+				>
+					Next
+				</button>
+				: null}
 		</div>
 	);
 }

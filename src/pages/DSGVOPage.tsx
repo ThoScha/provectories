@@ -39,7 +39,7 @@ export function FirstPage({
 			Altenberger Straße 69, 4040 Linz, <a href="mailto:thomas.schachinger@icloud.com">thomas.schachinger@icloud.com</a> oder <a href="cg@jku.at">cg@jku.at</a>.
 		</p>
 		<p>
-			Wenn Sie mehr Information über die Verarbeitung Ihrer personenbezogenen Daten wünschen, <a onClick={() => setShowMore(true)} href="#">bitte hier klicken</a>.
+			Wenn Sie mehr Information über die Verarbeitung Ihrer personenbezogenen Daten wünschen, <a role="button" onClick={() => setShowMore(true)} href="/#">bitte hier klicken</a>.
 		</p>
 		<div className="form-check mb-3">
 			<input
@@ -145,8 +145,8 @@ export function FirstPage({
 			</b>
 			<p>
 				Darüber hinaus kann sich die betroffene Person über eine ihrer Auffassung nach unzulässige Datenverarbeitung
-				bei der österreichischen Datenschutzbehörde, Barichgasse 40-42, 1030 Wien, Tel.: + 43 1 52 152-0, E-Mail: <a
-					href="dsb@dsb.gv.at">dsb@dsb.gv.at</a>
+				bei der österreichischen Datenschutzbehörde, Barichgasse 40-42, 1030 Wien, Tel.: + 43 1 52 152-0, E-Mail:
+				<a href="dsb@dsb.gv.at">dsb@dsb.gv.at</a>
 				beschweren.
 			</p>
 			<b>
@@ -155,7 +155,6 @@ export function FirstPage({
 			<p>
 				Der Datenschutzbeauftragte im Sinne des Art 37 DSGVO ist erreichbar unter Johannes Kepler Universität Linz (JKU),
 				Stabstelle Datenschutz, Altenberger Straße 69, 4040 Linz, datenschutz@jku.at.
-				<p> </p>
 			</p>
 		</>}
 	</div>

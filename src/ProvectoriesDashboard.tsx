@@ -11,15 +11,18 @@ import * as config from "./Config";
 
 const powerbi = new service.Service(factories.hpmFactory, factories.wpmpFactory, factories.routerFactory);
 
-export function ProvectoriesDashboard({ reportRef,
+export function ProvectoriesDashboard({
+	questionId,
+	reportRef,
 	error,
 	embedUrl,
 	accessTokenRef
 }: {
-	reportRef: React.MutableRefObject<Report | undefined>,
-	embedUrl: string,
-	error: string[],
-	accessTokenRef: React.MutableRefObject<string>
+	questionId: number;
+	reportRef: React.MutableRefObject<Report | undefined>;
+	embedUrl: string;
+	error: string[];
+	accessTokenRef: React.MutableRefObject<string>;
 }) {
 	const reportContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -88,12 +91,13 @@ export function ProvectoriesDashboard({ reportRef,
 
 	React.useEffect(() => {
 		reportRef.current = renderMyReport();
+		const container = reportContainerRef.current;
 		return () => {
-			if (reportContainerRef.current) {
-				powerbi.reset(reportContainerRef.current);
+			if (container) {
+				powerbi.reset(container);
 			}
 		}
-	}, [renderMyReport]);
+	}, [renderMyReport, questionId, reportRef]);
 
 	return <div id="reportContainer" className="d-flex mb-1" ref={reportContainerRef} style={{ height: "65vh" }} >
 		Loading the report...
