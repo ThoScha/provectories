@@ -215,9 +215,11 @@ export function App() {
 
 	return (
 		<div>
-			<h2 id="title" className="m-0 p-1">
-				Provectories: New Hires Example
-			</h2>
+			<div className="d-flex flex-column">
+				<h2 id="title" className="m-0 p-1">
+					Provectories: New Hires Example
+				</h2>
+			</div>
 			<div className="card m-1 overflow-auto" style={{ height: '88vh' }}>
 				<div className="card-body">
 					{pages[page]}
