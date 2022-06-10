@@ -1,13 +1,13 @@
 import { Report } from "report";
 import { setupProvenance } from "./Provenance";
-import { IAppState, IProvectories } from "../utils/interfaces";
-import { captureBookmark, exportData, toCamelCaseString, getCurrentVisuals, makeDeepCopy, getVisualAttributeMapper } from "../utils/utils";
+import { IAppState } from "../utils/interfaces";
+import { exportData, toCamelCaseString, getCurrentVisuals, makeDeepCopy, getVisualAttributeMapper } from "../utils/utils";
 import { Provenance } from "@visdesignlab/trrack";
 import 'powerbi-report-authoring';
 
-export const provenance: Provenance<IProvectories, string, void> = {} as Provenance<IProvectories, string, void>;
+export const provenance: Provenance<IAppState, string, void> = {} as Provenance<IAppState, string, void>;
 
-function setProvenance(newProvenance: Provenance<IProvectories, string, void>) {
+function setProvenance(newProvenance: Provenance<IAppState, string, void>) {
 	Object.keys(newProvenance).forEach((key) => {
 		provenance[key] = newProvenance[key];
 	});
@@ -15,12 +15,10 @@ function setProvenance(newProvenance: Provenance<IProvectories, string, void>) {
 
 class Provectories {
 	private readonly appState: IAppState;
-	private readonly bookmark: { current: string };
 	private readonly report: Report;
 
 	constructor(report: Report) {
 		this.appState = {};
-		this.bookmark = { current: '' };
 		this.report = report;
 		this.init();
 	}
@@ -115,18 +113,6 @@ class Provectories {
 		return appState;
 	};
 
-	/**
-	 * Captures bookmark of the current dashboard state, sets it in the bookmarkRef and returns bookmark
-	 * Only possible if report is loaded
-	 */
-	async setBookmark(): Promise<string> {
-		return await captureBookmark(this.report).then((captured) => {
-			const bookmark = captured?.state || '';
-			this.bookmark.current = bookmark;
-			return bookmark;
-		});
-	};
-
 	/**	
 	* Initialize appState
 	* Only possible if report is loaded
@@ -147,10 +133,7 @@ class Provectories {
 	async init(): Promise<void> {
 		await this.initAppState();
 		const appState = await this.setVisState(this.appState);
-		const bookmark = await this.setBookmark();
-		const { actions, provenance } = setupProvenance(
-			this.report, { appState, bookmark }, this.bookmark
-		);
+		const { actions, provenance } = setupProvenance(appState);
 
 		setProvenance(provenance);
 		const activePage = (await this.report.getActivePage()).name;
@@ -160,13 +143,11 @@ class Provectories {
 			// otherwise the provenance would make no sense for this case
 			if (activePage === (await this.report.getActivePage()).name) {
 				const label = this.setVisSelected(event);
-				const bookmark = await this.setBookmark();
 
 				// function call is done in provenance for better performance on the dashboard
 				const onDashboardClick = async () => {
 					const appState = await this.setVisState(makeDeepCopy(this.appState));
-					console.log(appState);
-					return { newState: { bookmark, appState }, label };
+					return { newState: appState, label };
 				};
 
 				actions.event(onDashboardClick);

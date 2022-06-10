@@ -2,7 +2,7 @@ import { Report } from "report";
 import { IReportBookmark, IExportDataResult } from "powerbi-models";
 import { models, VisualDescriptor } from "powerbi-client";
 import 'powerbi-report-authoring';
-import { IAppState, IExportFeatureVectorRow, IFeatureVector, IProvectories } from "./interfaces";
+import { IAppState, IExportFeatureVectorRow, IFeatureVector } from "./interfaces";
 import { Provenance } from "@visdesignlab/trrack";
 
 /**
@@ -177,14 +177,14 @@ export function appStateToFeatureVector(currState: IAppState, rootState: IAppSta
  * Goes through graph, returns feature vector row for each node and returns feature vector matrix
  * @param provenance Provenance object to featurize
  */
-export function featureVectorizeGraph(provenance: Provenance<IProvectories, string, void>, addCols: { [title: string]: string | number } = {}): IExportFeatureVectorRow[] {
+export function featureVectorizeGraph(provenance: Provenance<IAppState, string, void>, addCols: { [title: string]: string | number } = {}): IExportFeatureVectorRow[] {
 	const { root, graph } = provenance;
 	const featureVectors: IExportFeatureVectorRow[] = [];
 
 	Object.keys(graph.nodes).forEach((key) => {
 		const currNode = graph.nodes[key];
 		const currVector = appStateToFeatureVector(
-			provenance.getState(currNode.id).appState, provenance.getState(root.id).appState
+			provenance.getState(currNode.id), provenance.getState(root.id)
 		);
 		// adding header row
 		if (key === root.id) {

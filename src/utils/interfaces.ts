@@ -1,5 +1,4 @@
 import { Provenance } from "@visdesignlab/trrack";
-import { pick } from "lodash";
 
 export interface IVisState {
   [key: string]: number[] | string[];
@@ -21,11 +20,6 @@ export type IFeatureVector = {
 
 export type IExportFeatureVectorRow = (number | string | number[])[];
 
-export interface IProvectories {
-  appState: IAppState;
-  bookmark: string;
-}
-
 interface IQuestion {
   questionId: number;
   taskId: number;
@@ -43,6 +37,6 @@ export interface ICurrentQuestion extends IQuestion {
 }
 
 export interface IQuestionProvenance extends ICurrentQuestion {
-  provenance: Provenance<IProvectories, string, void>
+  provenance: Provenance<IAppState, string, void>
   endtime: number;
 }

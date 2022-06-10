@@ -44,14 +44,14 @@ export function BackgroundQuestionsPage({
 	return <div>
 		<h3 className="mb-4">Demographic Information</h3>
 		<div className="row my-3">
-			<div className="col-8"><h5>Please indicate your age?</h5></div>
+			<div className="col-8"><h5>Please indicate your age</h5></div>
 			<div className="col-4"><input type="number" min="0" max="100" className="form-control" value={age} onChange={(e) => setAge(e.target.valueAsNumber)} /></div>
 		</div>
 		<div className="row my-3">
-			<div className="col-8"><h5>Please indicate your gender?</h5></div>
+			<div className="col-8"><h5>Please indicate your gender</h5></div>
 			<div className="col-4">
 				<div className="btn-group w-100" role="group" aria-label="gender-radio-button-group">
-					{(['m', 'w', 'd'])
+					{(['m', 'f', 'd'])
 						.map((gen) => <RadioButton<string>
 							key={`gender-radio-button-${gen}`}
 							radioButtonId={gen}
