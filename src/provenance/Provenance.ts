@@ -1,6 +1,6 @@
 import { Provenance, initProvenance } from '@visdesignlab/trrack';
 import { Report } from 'powerbi-client';
-import { IProvectories } from './interfaces';
+import { IProvectories } from '../utils/interfaces';
 import { ActionReturnType } from '@visdesignlab/trrack/dist/Types/Action';
 
 export interface IAction {

@@ -1,7 +1,7 @@
 import { Report } from "report";
 import { setupProvenance } from "./Provenance";
-import { IAppState, IProvectories } from "./interfaces";
-import { captureBookmark, exportData, toCamelCaseString, getCurrentVisuals, makeDeepCopy, getVisualAttributeMapper } from "./utils";
+import { IAppState, IProvectories } from "../utils/interfaces";
+import { captureBookmark, exportData, toCamelCaseString, getCurrentVisuals, makeDeepCopy, getVisualAttributeMapper } from "../utils/utils";
 import { Provenance } from "@visdesignlab/trrack";
 import 'powerbi-report-authoring';
 

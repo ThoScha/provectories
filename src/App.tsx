@@ -1,140 +1,94 @@
-// ----------------------------------------------------------------------------
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-// ----------------------------------------------------------------------------
-
-import React, { RefObject } from "react";
+import * as React from "react";
 import { UserAgentApplication, AuthError, AuthResponse } from "msal";
-import { service, factories, models, IEmbedConfiguration, Report } from "powerbi-client";
-import "./App.css";
-import * as config from "./Config";
-import { provectories } from "./provenance/Provectories";
-import { DownloadAsCSVBtn } from "./provenance/DownloadAsCSVBtn";
-const powerbi = new service.Service(factories.hpmFactory, factories.wpmpFactory, factories.routerFactory);
+import { v4 as uuid } from 'uuid';
+import * as config from "./power-bi/Config";
+import { BackgroundQuestionsPage } from "./pages/BackgroundQuestionsPage";
+import { FirstPage } from "./pages/DSGVOPage";
+import { LastPage } from "./pages/LastPage";
+import { QuestionPage } from "./pages/QuestionPage";
+import { SatisfactionQuestionPage } from "./pages/SatisfactionQuestionPage";
+import { EVALUATION_QUESTIONS } from "./utils/constants";
+import { Report } from "powerbi-client";
+import { provenance } from "./provenance/Provectories";
+import { ICurrentQuestion, IQuestionProvenance } from "./utils/interfaces";
+import * as _ from "lodash";
 
-let accessToken = "";
-let embedUrl = "";
-let reportContainer: HTMLElement;
+const USER: string = uuid();
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface AppProps { };
-interface AppState { accessToken: string; embedUrl: string; error: string[]; reportRef: RefObject<any>; };
+export function App() {
+	const [page, setPage] = React.useState<number>(0);
+	const [questionCount, setQuestionCount] = React.useState<number>(0);
+	const [embedUrl, setEmbedUrl] = React.useState<string>('');
+	const [error, setError] = React.useState<string[]>([]);
+	const [showNextButton, setShowNextButton] = React.useState<boolean>(false);
+	const [disableNextButton, setDisableNExtButton] = React.useState<boolean>(false);
+	const [age, setAge] = React.useState<number>(0);
+	const [gender, setGender] = React.useState<string>('')
+	const [experience, setExperience] = React.useState<string>('');
+	const [confidence, setConfidence] = React.useState<number>(-1);
+	const [satisfaction, setSatisfaction] = React.useState<number>(-1);
+	const accessTokenRef = React.useRef<string>('');
+	const reportRef = React.useRef<Report>();
+	const currentQuestionRef = React.useRef<ICurrentQuestion | null>(null);
+	const questionProvanencesRef = React.useRef<IQuestionProvenance[]>([]);
 
-class App extends React.Component<AppProps, AppState> {
-	private myReport: any | Report;
-
-	constructor(props: AppProps) {
-		super(props);
-		this.state = { accessToken: "", embedUrl: "", error: [], reportRef: React.createRef() };
-		this.myReport = null;
-	}
-
-	// React function
-	render(): JSX.Element {
-		this.myReport = this.renderMyReport();
-		return (<div style={{ display: 'flex', flexDirection: 'column', margin: 15 }}>
-			<h2 id="title">
-				Provectories: New Hires Example
-			</h2>
-			<div style={{ display: 'flex', flexDirection: 'column', marginTop: 5 }}>
-				<div style={{ display: 'flex', flex: 1 }}>
-					<div id="reportContainer" ref={this.state.reportRef} style={{ display: 'flex', flex: 1, marginBottom: 5, height: "85vh" }} >
-						Loading the report...
-					</div>
-				</div>
-				{this.myReport ? <DownloadAsCSVBtn report={this.myReport} forceUpdate={this.forceUpdate.bind(this)} /> : null}
-			</div>
-		</div>);
-	}
-
-	// React function
-	async componentDidMount(): Promise<void> {
-
-		if (this.state.reportRef !== null) {
-			reportContainer = this.state.reportRef["current"];
-		}
-
-		// User input - null check
-		if (config.workspaceId === "" || config.reportId === "") {
-			this.setState({ error: ["Please assign values to workspace Id and report Id in Config.ts file"] })
-		} else {
-
-			// Authenticate the user and generate the access token
-			this.authenticate();
-		}
-	}
-
-	renderMyReport(): Report {
-		let report: any | Report = null;
-
-		if (this.state.error.length) {
-			// Cleaning the report container contents and rendering the error message in multiple lines
-			reportContainer.textContent = "";
-			this.state.error.forEach(line => {
-				reportContainer.appendChild(document.createTextNode(line));
-				reportContainer.appendChild(document.createElement("br"));
+	const nextPage = () => {
+		// avoids second click in case to csv-string took longer
+		setDisableNExtButton(true);
+		if (currentQuestionRef.current) {
+			questionProvanencesRef.current.push({
+				...currentQuestionRef.current,
+				provenance: _.cloneDeep(provenance),
+				endtime: new Date().getTime()
 			});
-			console.log('Error', this.state.error);
-		} else if (this.state.accessToken !== "" && this.state.embedUrl !== "") { // comment this condition
+		}
+		if (age > 0 && gender.length > 0 && experience.length > 0) {
+			setQuestionCount((prevState) => prevState + 1);
+		}
+		currentQuestionRef.current = null;
+		setPage((prevState) => prevState + 1);
+		setShowNextButton(false);
+		setDisableNExtButton(false);
+	};
 
-			const embedConfiguration: IEmbedConfiguration = {
-				type: "report",
-				tokenType: models.TokenType.Aad,
-				accessToken,
-				embedUrl,
-				permissions: models.Permissions.All,
-				id: config.reportId,
-				settings: {
-					visualRenderedEvents: true,
-					panes: {
-						filters: {
-							visible: true
-						},
-						pageNavigation: {
-							visible: true
+	// Power BI REST API call to get the embed URL of the report
+	const getembedUrl = React.useCallback(() => {
+		fetch("https://api.powerbi.com/v1.0/myorg/groups/" + config.workspaceId + "/reports/" + config.reportId, {
+			headers: {
+				"Authorization": "Bearer " + accessTokenRef.current
+			},
+			method: "GET"
+		})
+			.then(function (response) {
+				const errorMessage: string[] = [];
+				errorMessage.push("Error occurred while fetching the embed URL of the report")
+				errorMessage.push("Request Id: " + response.headers.get("requestId"));
+
+				response.json()
+					.then((body) => {
+						// Successful response
+						if (response.ok) {
+							// setAccessToken(accessToken);
+							setEmbedUrl(body["embedUrl"]);
 						}
-					}
-				}
-			};
-
-			report = powerbi.embed(reportContainer, embedConfiguration) as Report;
-
-
-			// Clear any other loaded handler events
-			report.off("loaded");
-
-
-			// Triggers when a content schema is successfully loaded
-			report.on("loaded", function () {
-				console.log("Report load successful");
-				// init provectories
-				provectories(report);
+						// If error message is available
+						else {
+							errorMessage.push("Error " + response.status + ": " + body.error.code);
+							setError(errorMessage);
+						}
+					})
+					.catch(function () {
+						errorMessage.push("Error " + response.status + ":  An error has occurred");
+						setError(errorMessage);
+					});
+			})
+			.catch(function (error) {
+				// Error in making the API call
+				setError(error);
 			});
+	}, [accessTokenRef]);
 
-			// Clear any other error handler event
-			report.off("error");
-
-			// Below patch of code is for handling errors that occur during embedding
-			report.on("error", function (event: any) {
-				const errorMsg = event.detail;
-
-				// Use errorMsg variable to log error in any destination of choice
-				console.error(errorMsg);
-			});
-		}
-
-		return report;
-	}
-
-	// React function
-	componentWillUnmount(): void {
-		powerbi.reset(reportContainer);
-	}
-
-	// Authenticating to get the access token
-	authenticate(): void {
-		const thisObj = this;
-
+	const authenticate = React.useCallback(() => {
 		const msalConfig = {
 			auth: {
 				clientId: config.clientId
@@ -147,39 +101,32 @@ class App extends React.Component<AppProps, AppState> {
 
 		const msalInstance: UserAgentApplication = new UserAgentApplication(msalConfig);
 
-		function successCallback(response: AuthResponse): void {
+		const successCallback = (response: AuthResponse) => {
 
 			if (response.tokenType === "id_token") {
-				thisObj.authenticate();
-
+				authenticate();
 			} else if (response.tokenType === "access_token") {
-
-				accessToken = response.accessToken;
-				thisObj.getembedUrl();
-
+				accessTokenRef.current = response.accessToken;
+				getembedUrl();
 			} else {
-
-				thisObj.setState({ error: [("Token type is: " + response.tokenType)] });
+				setError([("Token type is: " + response.tokenType)])
 			}
 		}
 
-		function failCallBack(error: AuthError): void {
-
-			thisObj.setState({ error: ["Redirect error: " + error] });
-		}
+		const failCallBack = (error: AuthError) => {
+			setError(["Redirect error: " + error]);
+		};
 
 		msalInstance.handleRedirectCallback(successCallback, failCallBack);
 
 		// check if there is a cached user
 		if (msalInstance.getAccount()) {
-
 			// get access token silently from cached id-token
 			msalInstance.acquireTokenSilent(loginRequest)
 				.then((response: AuthResponse) => {
-
 					// get access token from response: response.accessToken
-					accessToken = response.accessToken;
-					this.getembedUrl();
+					accessTokenRef.current = response.accessToken;
+					getembedUrl();
 				})
 				.catch((err: AuthError) => {
 
@@ -189,58 +136,107 @@ class App extends React.Component<AppProps, AppState> {
 						msalInstance.acquireTokenRedirect(loginRequest);
 					}
 					else {
-						thisObj.setState({ error: [err.toString()] })
+						setError([err.toString()]);
 					}
 				});
 		} else {
-
 			// user is not logged in or cached, you will need to log them in to acquire a token
 			msalInstance.loginRedirect(loginRequest);
 		}
-	}
+	}, [getembedUrl]);
 
-	// Power BI REST API call to get the embed URL of the report
-	getembedUrl(): void {
-		const thisObj: this = this;
+	React.useEffect(() => {
+		// User input - null check
+		if (config.workspaceId === "" || config.reportId === "") {
+			setError(["Please assign values to workspace Id and report Id in Config.ts file"]);
+		} else {
+			// Authenticate the user and generate the access token
+			authenticate();
+		}
+	}, [authenticate]);
 
-		fetch("https://api.powerbi.com/v1.0/myorg/groups/" + config.workspaceId + "/reports/" + config.reportId, {
-			headers: {
-				"Authorization": "Bearer " + accessToken
-			},
-			method: "GET"
-		})
-			.then(function (response) {
-				const errorMessage: string[] = [];
-				errorMessage.push("Error occurred while fetching the embed URL of the report")
-				errorMessage.push("Request Id: " + response.headers.get("requestId"));
+	const pages: { [page: number]: React.ReactNode } = React.useMemo<{ [page: number]: React.ReactNode }>(() => {
+		const ps = {
+			0: <FirstPage setShowNextButton={setShowNextButton} />,
+			1: <BackgroundQuestionsPage
+				age={age}
+				gender={gender}
+				experience={experience}
+				confidence={confidence}
+				setAge={setAge}
+				setGender={setGender}
+				setExperience={setExperience}
+				setConfidence={setConfidence}
+				setShowNextButton={setShowNextButton}
+			/>,
+			10: <SatisfactionQuestionPage
+				satisfaction={satisfaction}
+				setSatisfaction={setSatisfaction}
+				setShowNextButton={setShowNextButton}
+			/>,
+			11: <LastPage
+				questionProvanencesRef={questionProvanencesRef}
+				age={age}
+				gender={gender}
+				experience={experience}
+				confidence={confidence}
+				satisfaction={satisfaction}
+				user={USER}
+			/>
+		}
+		// Add question-pages to pages
+		EVALUATION_QUESTIONS.forEach((question, i) => {
+			ps[i + 2] = <QuestionPage
+				evaluationQuestion={question}
+				reportRef={reportRef}
+				accessTokenRef={accessTokenRef}
+				currentQuestionRef={currentQuestionRef}
+				embedUrl={embedUrl}
+				error={error}
+				setShowNextButton={setShowNextButton}
+			/>
+		});
+		return ps;
+	}, [
+		age,
+		gender,
+		experience,
+		confidence,
+		satisfaction,
+		embedUrl,
+		error,
+		setAge,
+		setGender,
+		setConfidence,
+		setExperience,
+		setSatisfaction,
+		setShowNextButton
+	]);
 
-				response.json()
-					.then(function (body) {
-						// Successful response
-						if (response.ok) {
-							embedUrl = body["embedUrl"];
-							thisObj.setState({ accessToken: accessToken, embedUrl: embedUrl });
-						}
-						// If error message is available
-						else {
-							errorMessage.push("Error " + response.status + ": " + body.error.code);
-
-							thisObj.setState({ error: errorMessage });
-						}
-
-					})
-					.catch(function () {
-						errorMessage.push("Error " + response.status + ":  An error has occurred");
-
-						thisObj.setState({ error: errorMessage });
-					});
-			})
-			.catch(function (error) {
-
-				// Error in making the API call
-				thisObj.setState({ error: error });
-			})
-	}
+	return (
+		<div>
+			<h2 id="title" className="m-0 p-1">
+				Provectories: New Hires Example
+			</h2>
+			<div className="card m-1 overflow-auto" style={{ height: '88vh' }}>
+				<div className="card-body">
+					{pages[page]}
+				</div>
+			</div>
+			<div className="d-flex justify-content-between mx-1">
+				<p className="text-muted">{questionCount > 0 && questionCount < 9 ? `Question ${questionCount}/8` : null}</p>
+				{showNextButton ?
+					<button
+						className="btn btn-primary"
+						onClick={() => nextPage()}
+						disabled={disableNextButton}
+						type="button"
+						style={{ width: '12vh' }}
+					>
+						Next
+					</button>
+					: null}
+			</div>
+		</div>
+	);
 }
-
-export default App;
