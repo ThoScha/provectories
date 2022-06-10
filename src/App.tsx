@@ -48,14 +48,14 @@ export function App() {
 						});
 					}
 					currentQuestionRef.current = null;
-					resolve(1);
+					resolve(-1);
 				}, 1500)
 			});
 		}
+		setPage((prevState) => prevState + 1);
 		if (age > 0 && gender.length > 0 && experience.length > 0) {
 			setQuestionCount((prevState) => prevState + 1);
 		}
-		setPage((prevState) => prevState + 1);
 		setShowNextButton(false);
 		setDisableNExtButton(false);
 	};
@@ -164,56 +164,61 @@ export function App() {
 		}
 	}, [authenticate]);
 
-	const pages: { [page: number]: React.ReactNode } = React.useMemo<{ [page: number]: React.ReactNode }>(() => {
-		const ps = {
-			0: <FirstPage setShowNextButton={setShowNextButton} />,
-			1: <BackgroundQuestionsPage
-				age={age}
-				gender={gender}
-				experience={experience}
-				confidence={confidence}
-				setAge={setAge}
-				setGender={setGender}
-				setExperience={setExperience}
-				setConfidence={setConfidence}
-				setShowNextButton={setShowNextButton}
-			/>,
-			10: <SatisfactionQuestionPage
-				satisfaction={satisfaction}
-				setSatisfaction={setSatisfaction}
-				setShowNextButton={setShowNextButton}
-			/>,
-			11: <LastPage
-				questionProvanencesRef={questionProvanencesRef}
-				age={age}
-				gender={gender}
-				experience={experience}
-				confidence={confidence}
-				satisfaction={satisfaction}
-				user={USER}
-			/>
+	const pages: React.ReactNode = React.useMemo<React.ReactNode>(() => {
+		switch (page) {
+			case 0:
+				return <FirstPage setShowNextButton={setShowNextButton} />;
+			case 1:
+				return <BackgroundQuestionsPage
+					age={age}
+					gender={gender}
+					experience={experience}
+					confidence={confidence}
+					setAge={setAge}
+					setGender={setGender}
+					setExperience={setExperience}
+					setConfidence={setConfidence}
+					setShowNextButton={setShowNextButton}
+				/>;
+			case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9:
+				return <QuestionPage
+					evaluationQuestion={EVALUATION_QUESTIONS[questionCount]}
+					reportRef={reportRef}
+					accessTokenRef={accessTokenRef}
+					currentQuestionRef={currentQuestionRef}
+					embedUrl={embedUrl}
+					error={error}
+					setShowNextButton={setShowNextButton}
+				/>;
+			case 10:
+				return <SatisfactionQuestionPage
+					satisfaction={satisfaction}
+					setSatisfaction={setSatisfaction}
+					setShowNextButton={setShowNextButton}
+				/>;
+			case 11:
+				return <LastPage
+					questionProvanencesRef={questionProvanencesRef}
+					age={age}
+					gender={gender}
+					experience={experience}
+					confidence={confidence}
+					satisfaction={satisfaction}
+					user={USER}
+				/>
+			default:
+				return <p>Invalid page number!</p>
 		}
-		// Add question-pages to pages
-		EVALUATION_QUESTIONS.forEach((question, i) => {
-			ps[i + 2] = <QuestionPage
-				evaluationQuestion={question}
-				reportRef={reportRef}
-				accessTokenRef={accessTokenRef}
-				currentQuestionRef={currentQuestionRef}
-				embedUrl={embedUrl}
-				error={error}
-				setShowNextButton={setShowNextButton}
-			/>
-		});
-		return ps;
 	}, [
 		age,
+		page,
 		gender,
 		experience,
 		confidence,
 		satisfaction,
 		embedUrl,
 		error,
+		questionCount,
 		setAge,
 		setGender,
 		setConfidence,
@@ -231,7 +236,7 @@ export function App() {
 			</div>
 			<div className="card m-1 overflow-auto" style={{ height: '88vh' }}>
 				<div className="card-body">
-					{pages[page]}
+					{pages}
 				</div>
 			</div>
 			<div className="d-flex justify-content-between mx-1">

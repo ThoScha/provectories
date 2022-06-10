@@ -25,8 +25,17 @@ export function LastPage({
 	const getCsvString = (): string => {
 		const csvRows: IExportFeatureVectorRow[] = [];
 		questionProvanencesRef.current.sort((a, b) => a.questionId - b.questionId).forEach((y, i) => {
-			const addCols = { user, age, gender, experience, confidence, satisfaction };
-			Object.keys(y).filter((key) => key !== "provenance").forEach((key) => addCols[key] = y[key]);
+			const addCols = {
+				user,
+				age,
+				gender,
+				experience: experience === 'Yes' ? 1 : 0,
+				confidence,
+				satisfaction,
+				...Object.keys(y)
+					.filter((key) => key !== "provenance")
+					.reduce((obj, key) => ({ ...obj, [key]: y[key] }), {})
+			};
 			let vectors: IExportFeatureVectorRow[] = featureVectorizeGraph(y.provenance, addCols);
 			if (i > 0) {
 				vectors = vectors.slice(1);
