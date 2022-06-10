@@ -1,4 +1,5 @@
 import { Provenance } from "@visdesignlab/trrack";
+import { pick } from "lodash";
 
 export interface IVisState {
   [key: string]: number[] | string[];
@@ -25,12 +26,20 @@ export interface IProvectories {
   bookmark: string;
 }
 
-export interface ICurrentQuestion {
+interface IQuestion {
+  questionId: number;
+  taskId: number;
+  correctAnswerId: number;
+}
+
+export interface IEvaluationQuestion extends IQuestion {
+  question: string;
+  answerPossibilites: { [key: number]: string | number };
+}
+
+export interface ICurrentQuestion extends IQuestion {
   answerId: number;
   mentalEffort: number;
-  correctAnswerId: number;
-  taskId: number;
-  questionId: number;
 }
 
 export interface IQuestionProvenance extends ICurrentQuestion {

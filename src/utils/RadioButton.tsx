@@ -1,6 +1,6 @@
 import * as React from "react";
 
-export function PageRadioButton<T>({ radioButtonId, title, selected, setSelected }: { radioButtonId: T, title: string, selected: T, setSelected: (selected: T) => void }) {
+export function RadioButton<T>({ radioButtonId, title, selected, setSelected }: { radioButtonId: T, title: string, selected: T, setSelected: (selected: T) => void }) {
 	const htmlFor = title.replaceAll(' ', '') + '-' + radioButtonId;
 	return <>
 		<input

@@ -1,5 +1,5 @@
 import React from "react";
-import { PageRadioButton } from "./PageRadioButton";
+import { RadioButton } from "../utils/RadioButton";
 
 export function BackgroundQuestionsPage({
 	age,
@@ -52,7 +52,7 @@ export function BackgroundQuestionsPage({
 			<div className="col-4">
 				<div className="btn-group w-100" role="group" aria-label="gender-radio-button-group">
 					{(['m', 'w', 'd'])
-						.map((gen) => <PageRadioButton<string>
+						.map((gen) => <RadioButton<string>
 							key={`gender-radio-button-${gen}`}
 							radioButtonId={gen}
 							title={gen}
@@ -68,7 +68,7 @@ export function BackgroundQuestionsPage({
 			<div className="col-4">
 				<div className="btn-group w-100" role="group" aria-label="experience-radio-button-group">
 					{['Yes', 'No']
-						.map((label) => <PageRadioButton<string>
+						.map((label) => <RadioButton<string>
 							key={`experience-radio-button-${label}`}
 							radioButtonId={label}
 							title={label}
@@ -85,7 +85,7 @@ export function BackgroundQuestionsPage({
 				<div className="col-4">
 					<div className="btn-group w-100" role="group" aria-label="confidence-radio-button-group">
 						{[1, 2, 3, 4, 5, 6]
-							.map((num) => <PageRadioButton<number>
+							.map((num) => <RadioButton<number>
 								key={`confidence-radio-button-${num}`}
 								radioButtonId={num}
 								title={String(num)}

@@ -1,5 +1,5 @@
 import React from "react";
-import { PageRadioButton } from "./PageRadioButton";
+import { RadioButton } from "../utils/RadioButton";
 
 export function SatisfactionQuestionPage({
 	satisfaction,
@@ -26,7 +26,7 @@ export function SatisfactionQuestionPage({
 			<div className="row w-75">
 				<div className="btn-group w-100" role="group" aria-label="satisfaction-radio-button-group">
 					{[1, 2, 3, 4, 5, 6]
-						.map((num) => <PageRadioButton<number>
+						.map((num) => <RadioButton<number>
 							key={`satisfaction-radio-button-${num}`}
 							radioButtonId={num}
 							title={String(num)}

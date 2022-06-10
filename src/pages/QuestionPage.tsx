@@ -1,9 +1,9 @@
 import { Report } from 'powerbi-client';
 import * as React from 'react';
-import { IEvaluationQuestion } from '../utils/constants';
+import { IEvaluationQuestion } from '../utils/interfaces';
 import { ProvectoriesDashboard } from '../power-bi/ProvectoriesDashboard';
 import { ICurrentQuestion } from '../utils/interfaces';
-import { PageRadioButton } from './PageRadioButton';
+import { RadioButton } from '../utils/RadioButton';
 
 export function QuestionPage({
 	evaluationQuestion,
@@ -38,7 +38,7 @@ export function QuestionPage({
 
 	React.useEffect(() => {
 		currentQuestionRef.current = {
-			correctAnswerId: evaluationQuestion.correctAnswer,
+			correctAnswerId: evaluationQuestion.correctAnswerId,
 			questionId: evaluationQuestion.questionId,
 			taskId: evaluationQuestion.taskId,
 			answerId: selectedAnswer,
@@ -64,7 +64,7 @@ export function QuestionPage({
 				<div className="col-6">
 					<div className="btn-group w-100" role="group" aria-label="evaluation-answer-radio-button-group">
 						{reportLoaded ? Object.keys(evaluationQuestion.answerPossibilites)
-							.map((key) => <PageRadioButton<number>
+							.map((key) => <RadioButton<number>
 								key={`evaluation-answer-${evaluationQuestion.questionId}-${key}`}
 								radioButtonId={Number(key)}
 								title={evaluationQuestion.answerPossibilites[key].toString()}
@@ -82,7 +82,7 @@ export function QuestionPage({
 				<div className="col-6">
 					<div className="btn-group w-100" role="group" aria-label="mental-effort-radio-button-group">
 						{[1, 2, 3, 4, 5, 6]
-							.map((num) => <PageRadioButton<number>
+							.map((num) => <RadioButton<number>
 								key={`mental-effort-radio-button-${num}`}
 								radioButtonId={num}
 								title={num.toString()}
