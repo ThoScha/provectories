@@ -1,9 +1,9 @@
 import React from "react";
-import { IExportFeatureVectorRow, yolo } from "../provenance/interfaces";
-import { featureVectorizeGraph, featureVectorsToCsvString } from "../provenance/utils";
+import { IExportFeatureVectorRow, IQuestionProvenance } from "../utils/interfaces";
+import { featureVectorizeGraph, featureVectorsToCsvString } from "../utils/utils";
 
 export function LastPage({
-	yoloRef,
+	questionProvanencesRef,
 	age,
 	gender,
 	experience,
@@ -11,7 +11,7 @@ export function LastPage({
 	satisfaction,
 	user
 }: {
-	yoloRef: React.MutableRefObject<yolo[]>
+	questionProvanencesRef: React.MutableRefObject<IQuestionProvenance[]>
 	age: number;
 	gender: string;
 	experience: string;
@@ -24,7 +24,7 @@ export function LastPage({
 
 	const getCsvString = (): string => {
 		const csvRows: IExportFeatureVectorRow[] = [];
-		yoloRef.current.forEach((y, i) => {
+		questionProvanencesRef.current.forEach((y, i) => {
 			const addCols = { user, age, gender, experience, confidence, satisfaction };
 			Object.keys(y).filter((key) => key !== "provenance").forEach((key) => addCols[key] = y[key]);
 			let vectors: IExportFeatureVectorRow[] = featureVectorizeGraph(y.provenance, addCols);
@@ -41,7 +41,7 @@ export function LastPage({
 		const anchor = document.createElement('a');
 		anchor.style.display = 'none';
 		if ("download" in anchor) {
-			anchor.download = `provectories-${user}-${new Date().getTime()}.csv`;
+			anchor.download = `provectories-${user}.csv`;
 			anchor.href = uri;
 			anchor.click();
 		} else {

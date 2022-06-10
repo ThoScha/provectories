@@ -1,23 +1,23 @@
 import * as React from "react";
-import "./App.css";
 import { UserAgentApplication, AuthError, AuthResponse } from "msal";
 import { v4 as uuid } from 'uuid';
-import * as config from "./Config";
+import * as config from "./power-bi/Config";
 import { BackgroundQuestionsPage } from "./pages/BackgroundQuestionsPage";
 import { FirstPage } from "./pages/DSGVOPage";
 import { LastPage } from "./pages/LastPage";
 import { QuestionPage } from "./pages/QuestionPage";
 import { SatisfactionQuestionPage } from "./pages/SatisfactionQuestionPage";
-import { EVALUATION_QUESTIONS } from "./constants";
+import { EVALUATION_QUESTIONS } from "./utils/constants";
 import { Report } from "powerbi-client";
-import { featureVectorizeGraph } from "./provenance/utils";
 import { provenance } from "./provenance/Provectories";
-import { ICurrentQuestion, yolo } from "./provenance/interfaces";
+import { ICurrentQuestion, IQuestionProvenance } from "./utils/interfaces";
+import * as _ from "lodash";
 
 const USER: string = uuid();
 
 export function App() {
 	const [page, setPage] = React.useState<number>(0);
+	const [questionCount, setQuestionCount] = React.useState<number>(0);
 	const [embedUrl, setEmbedUrl] = React.useState<string>('');
 	const [error, setError] = React.useState<string[]>([]);
 	const [showNextButton, setShowNextButton] = React.useState<boolean>(false);
@@ -30,18 +30,20 @@ export function App() {
 	const accessTokenRef = React.useRef<string>('');
 	const reportRef = React.useRef<Report>();
 	const currentQuestionRef = React.useRef<ICurrentQuestion | null>(null);
-	const yoloRef = React.useRef<yolo[]>([]);
+	const questionProvanencesRef = React.useRef<IQuestionProvenance[]>([]);
 
 	const nextPage = () => {
 		// avoids second click in case to csv-string took longer
 		setDisableNExtButton(true);
 		if (currentQuestionRef.current) {
-			yoloRef.current.push({
+			questionProvanencesRef.current.push({
 				...currentQuestionRef.current,
-				provenance: Object.create(provenance),
+				provenance: _.cloneDeep(provenance),
 				endtime: new Date().getTime()
 			});
-			featureVectorizeGraph(Object.create(provenance));
+		}
+		if (age > 0 && gender.length > 0 && experience.length > 0) {
+			setQuestionCount((prevState) => prevState + 1);
 		}
 		currentQuestionRef.current = null;
 		setPage((prevState) => prevState + 1);
@@ -153,52 +155,49 @@ export function App() {
 		}
 	}, [authenticate]);
 
-	const pages: { [page: number]: React.ReactNode } = React.useMemo<{ [page: number]: React.ReactNode }>(() => ({
-		0: <FirstPage setShowNextButton={setShowNextButton} />,
-		1: <BackgroundQuestionsPage
-			age={age}
-			gender={gender}
-			experience={experience}
-			confidence={confidence}
-			setAge={setAge}
-			setGender={setGender}
-			setExperience={setExperience}
-			setConfidence={setConfidence}
-			setShowNextButton={setShowNextButton}
-		/>,
-		2: <QuestionPage
-			evaluationQuestion={EVALUATION_QUESTIONS[0]}
-			reportRef={reportRef}
-			accessTokenRef={accessTokenRef}
-			currentQuestionRef={currentQuestionRef}
-			embedUrl={embedUrl}
-			error={error}
-			setShowNextButton={setShowNextButton}
-		/>,
-		3: <QuestionPage
-			evaluationQuestion={EVALUATION_QUESTIONS[1]}
-			reportRef={reportRef}
-			accessTokenRef={accessTokenRef}
-			currentQuestionRef={currentQuestionRef}
-			embedUrl={embedUrl}
-			error={error}
-			setShowNextButton={setShowNextButton}
-		/>,
-		4: <SatisfactionQuestionPage
-			satisfaction={satisfaction}
-			setSatisfaction={setSatisfaction}
-			setShowNextButton={setShowNextButton}
-		/>,
-		5: <LastPage
-			yoloRef={yoloRef}
-			age={age}
-			gender={gender}
-			experience={experience}
-			confidence={confidence}
-			satisfaction={satisfaction}
-			user={USER}
-		/>
-	}), [
+	const pages: { [page: number]: React.ReactNode } = React.useMemo<{ [page: number]: React.ReactNode }>(() => {
+		const ps = {
+			0: <FirstPage setShowNextButton={setShowNextButton} />,
+			1: <BackgroundQuestionsPage
+				age={age}
+				gender={gender}
+				experience={experience}
+				confidence={confidence}
+				setAge={setAge}
+				setGender={setGender}
+				setExperience={setExperience}
+				setConfidence={setConfidence}
+				setShowNextButton={setShowNextButton}
+			/>,
+			10: <SatisfactionQuestionPage
+				satisfaction={satisfaction}
+				setSatisfaction={setSatisfaction}
+				setShowNextButton={setShowNextButton}
+			/>,
+			11: <LastPage
+				questionProvanencesRef={questionProvanencesRef}
+				age={age}
+				gender={gender}
+				experience={experience}
+				confidence={confidence}
+				satisfaction={satisfaction}
+				user={USER}
+			/>
+		}
+		// Add question-pages to pages
+		EVALUATION_QUESTIONS.forEach((question, i) => {
+			ps[i + 2] = <QuestionPage
+				evaluationQuestion={question}
+				reportRef={reportRef}
+				accessTokenRef={accessTokenRef}
+				currentQuestionRef={currentQuestionRef}
+				embedUrl={embedUrl}
+				error={error}
+				setShowNextButton={setShowNextButton}
+			/>
+		});
+		return ps;
+	}, [
 		age,
 		gender,
 		experience,
@@ -224,17 +223,20 @@ export function App() {
 					{pages[page]}
 				</div>
 			</div>
-			{showNextButton ?
-				<button
-					className="btn btn-primary float-end me-1"
-					onClick={() => nextPage()}
-					disabled={disableNextButton}
-					type="button"
-					style={{ width: '12vh' }}
-				>
-					Next
-				</button>
-				: null}
+			<div className="d-flex justify-content-between mx-1">
+				<p className="text-muted">{questionCount > 0 && questionCount < 9 ? `Question ${questionCount}/8` : null}</p>
+				{showNextButton ?
+					<button
+						className="btn btn-primary"
+						onClick={() => nextPage()}
+						disabled={disableNextButton}
+						type="button"
+						style={{ width: '12vh' }}
+					>
+						Next
+					</button>
+					: null}
+			</div>
 		</div>
 	);
 }

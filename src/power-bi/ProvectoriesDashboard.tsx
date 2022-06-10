@@ -5,8 +5,7 @@
 
 import * as React from "react";
 import { service, factories, models, IEmbedConfiguration, Report } from "powerbi-client";
-import "./App.css";
-import { provectories } from "./provenance/Provectories";
+import { provectories } from "../provenance/Provectories";
 import * as config from "./Config";
 
 const powerbi = new service.Service(factories.hpmFactory, factories.wpmpFactory, factories.routerFactory);

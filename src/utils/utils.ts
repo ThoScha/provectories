@@ -3,7 +3,7 @@ import { IReportBookmark, IExportDataResult } from "powerbi-models";
 import { models, VisualDescriptor } from "powerbi-client";
 import 'powerbi-report-authoring';
 import { IAppState, IExportFeatureVectorRow, IFeatureVector, IProvectories } from "./interfaces";
-import { Provenance } from "@visdesignlab/trrack/dist/Types/Provenance";
+import { Provenance } from "@visdesignlab/trrack";
 
 /**
  * Captures and returns current bookmark
@@ -191,8 +191,8 @@ export function featureVectorizeGraph(provenance: Provenance<IProvectories, stri
 			featureVectors.push(['timestamp', ...Object.keys(addCols), 'triggeredAction', ...Object.keys(currVector)]);
 		}
 		const newRow: IExportFeatureVectorRow = [currNode.metadata.createdOn || -1, ...Object.values(addCols), currNode.label];
-		// skip first column since time is no key in feature vector
-		(featureVectors[0] as string[]).slice(3 + Object.keys(addCols).length).forEach((title) => newRow.push(currVector[title] ? currVector[title] : ""));
+		// skip first columns (that are not in the feature vector)
+		(featureVectors[0] as string[]).slice(featureVectors[0].length - Object.keys(currVector).length).forEach((title) => newRow.push(currVector[title] ? currVector[title] : ""));
 		featureVectors.push(newRow);
 	});
 	return featureVectors;

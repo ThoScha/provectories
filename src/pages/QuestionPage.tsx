@@ -1,8 +1,8 @@
 import { Report } from 'powerbi-client';
 import * as React from 'react';
-import { IEvaluationQuestion } from '../constants';
-import { ProvectoriesDashboard } from '../ProvectoriesDashboard';
-import { ICurrentQuestion } from '../provenance/interfaces';
+import { IEvaluationQuestion } from '../utils/constants';
+import { ProvectoriesDashboard } from '../power-bi/ProvectoriesDashboard';
+import { ICurrentQuestion } from '../utils/interfaces';
 import { PageRadioButton } from './PageRadioButton';
 
 export function QuestionPage({
@@ -30,9 +30,9 @@ export function QuestionPage({
 		setReportLoaded(false)
 		setSelectedAnswer(-1);
 		setSelectedMentalEffort(-1);
-		reportRef.current?.on("loaded", () => {
+		reportRef.current?.on("rendered", () => {
 			setReportLoaded(true);
-			reportRef.current?.off("loaded");
+			reportRef.current?.off("rendered");
 		})
 	}, [evaluationQuestion.questionId, reportRef]);
 
@@ -59,7 +59,7 @@ export function QuestionPage({
 		<div>
 			<div className="row">
 				<div className="col-6">
-					<p>Frage {evaluationQuestion.questionId}: {evaluationQuestion.question}</p>
+					<h5>{evaluationQuestion.question}</h5>
 				</div>
 				<div className="col-6">
 					<div className="btn-group w-100" role="group" aria-label="evaluation-answer-radio-button-group">
@@ -67,7 +67,7 @@ export function QuestionPage({
 							.map((key) => <PageRadioButton<number>
 								key={`evaluation-answer-${evaluationQuestion.questionId}-${key}`}
 								radioButtonId={Number(key)}
-								title={evaluationQuestion.answerPossibilites[key]}
+								title={evaluationQuestion.answerPossibilites[key].toString()}
 								selected={selectedAnswer}
 								setSelected={setSelectedAnswer}
 							/>)
@@ -77,7 +77,7 @@ export function QuestionPage({
 			</div>
 			{selectedAnswer !== -1 ? <div className="mt-3 row">
 				<div className="col-6">
-					<p>How high would you rate the amount of mental effort invested for completing this task?</p>
+					<h5>How high would you rate the amount of mental effort invested for completing this task?</h5>
 				</div>
 				<div className="col-6">
 					<div className="btn-group w-100" role="group" aria-label="mental-effort-radio-button-group">

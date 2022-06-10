@@ -33,7 +33,7 @@ export interface ICurrentQuestion {
   questionId: number;
 }
 
-export interface yolo extends ICurrentQuestion {
+export interface IQuestionProvenance extends ICurrentQuestion {
   provenance: Provenance<IProvectories, string, void>
   endtime: number;
 }

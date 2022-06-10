@@ -10,6 +10,7 @@
     "@visdesignlab/trrack": "^2.0.0-alpha.10",
     "@visdesignlab/trrack-vis": "^2.0.0-alpha.12",
     "d3": "^7.0.0",
+    "lodash": "^4.17.21",
     "msal": "^1.4.1",
     "powerbi-client": "^2.19.1",
     "powerbi-models": "^1.9.8",
@@ -44,6 +45,7 @@
     ]
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.182",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
