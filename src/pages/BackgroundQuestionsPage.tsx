@@ -42,7 +42,7 @@ export function BackgroundQuestionsPage({
 	]);
 
 	return <div>
-		<h3 className="mb-4">Demographic Information</h3>
+		<h2 className="mb-4">Demographic Information</h2>
 		<div className="row my-3">
 			<div className="col-8"><h5>Please indicate your age</h5></div>
 			<div className="col-4"><input type="number" min="0" max="100" className="form-control" value={age} onChange={(e) => setAge(e.target.valueAsNumber)} /></div>

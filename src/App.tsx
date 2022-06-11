@@ -10,55 +10,130 @@ import { SatisfactionQuestionPage } from "./pages/SatisfactionQuestionPage";
 import { EVALUATION_QUESTIONS } from "./utils/constants";
 import { Report } from "powerbi-client";
 import { provenance } from "./provenance/Provectories";
-import { ICurrentQuestion, IQuestionProvenance } from "./utils/interfaces";
+import { ICurrentQuestion, IProvenanceQuestion } from "./utils/interfaces";
 import _ from "lodash";
+import { WelcomePage } from "./pages/WelcomePage";
 
 const USER: string = uuid();
 
 export function App() {
-	const [page, setPage] = React.useState<number>(0);
-	const [questionCount, setQuestionCount] = React.useState<number>(0);
-	const [embedUrl, setEmbedUrl] = React.useState<string>('');
-	const [error, setError] = React.useState<string[]>([]);
-	const [showNextButton, setShowNextButton] = React.useState<boolean>(false);
-	const [disableNextButton, setDisableNExtButton] = React.useState<boolean>(false);
 	const [age, setAge] = React.useState<number>(0);
+	const [error, setError] = React.useState<string[]>([]);
 	const [gender, setGender] = React.useState<string>('')
+	const [embedUrl, setEmbedUrl] = React.useState<string>('');
 	const [experience, setExperience] = React.useState<string>('');
 	const [confidence, setConfidence] = React.useState<number>(-1);
+	const [pageNumber, setPageNumber] = React.useState<number>(1);
 	const [satisfaction, setSatisfaction] = React.useState<number>(-1);
+	const [showNextButton, setShowNextButton] = React.useState<boolean>(false);
+	const [currentQuestion, setCurrentQuestion] = React.useState<ICurrentQuestion | null>(null);
+	const [disableNextButton, setDisableNExtButton] = React.useState<boolean>(false);
+	const questionProvanencesRef = React.useRef<IProvenanceQuestion[]>([]);
+	const questionNumberRef = React.useRef<number>(-1);
 	const accessTokenRef = React.useRef<string>('');
 	const reportRef = React.useRef<Report>();
-	const currentQuestionRef = React.useRef<ICurrentQuestion | null>(null);
-	const questionProvanencesRef = React.useRef<IQuestionProvenance[]>([]);
 
 	const onNextPageButtonClick = async () => {
 		setDisableNExtButton(true);
 		// only set in question pages
-		if (currentQuestionRef.current) {
+		if (currentQuestion) {
 			// wait for background async provenance track calls to be finished
 			await new Promise((resolve) => {
 				setTimeout(() => {
-					//checkin again bc this could be null already
-					if (currentQuestionRef.current) {
-						questionProvanencesRef.current.push({
-							...currentQuestionRef.current,
-							provenance: _.cloneDeep(provenance),
-							endtime: new Date().getTime()
-						});
-					}
-					currentQuestionRef.current = null;
+					questionProvanencesRef.current.push({
+						...(_.omit(currentQuestion, ['answerPossibilities', 'question'])),
+						provenance: _.cloneDeep(provenance),
+						endtime: new Date().getTime()
+					});
 					resolve(-1);
-				}, 1500)
+				}, 1500);
 			});
 		}
-		setPage((prevState) => prevState + 1);
-		if (age > 0 && gender.length > 0 && experience.length > 0) {
-			setQuestionCount((prevState) => prevState + 1);
+		// check for values before the question pages and if there is a next question
+		if (
+			age > 0 &&
+			gender.length > 0 &&
+			experience.length > 0 &&
+			questionNumberRef.current < (EVALUATION_QUESTIONS.length - 1)
+		) {
+			questionNumberRef.current += 1;
+			setCurrentQuestion({ ...EVALUATION_QUESTIONS[questionNumberRef.current], mentalEffort: -1, answerId: -1 });
+		} else { // no next question
+			setCurrentQuestion(null);
 		}
-		setShowNextButton(false);
+
 		setDisableNExtButton(false);
+		setShowNextButton(false);
+		setPageNumber((prevState) => prevState + 1);
 	};
+
+	const currentPage: React.ReactNode = React.useMemo<React.ReactNode>(() => {
+		switch (pageNumber) {
+			case 1:
+				setShowNextButton(true);
+				return <WelcomePage />
+			case 2:
+				return <FirstPage setShowNextButton={setShowNextButton} />;
+			case 3:
+				return <BackgroundQuestionsPage
+					age={age}
+					gender={gender}
+					experience={experience}
+					confidence={confidence}
+					setShowNextButton={setShowNextButton}
+					setExperience={setExperience}
+					setConfidence={setConfidence}
+					setGender={setGender}
+					setAge={setAge}
+				/>;
+			case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11:
+				return currentQuestion ?
+					<QuestionPage
+						error={error}
+						embedUrl={embedUrl}
+						reportRef={reportRef}
+						accessTokenRef={accessTokenRef}
+						currentQuestion={currentQuestion}
+						setCurrentQuestion={setCurrentQuestion}
+						setShowNextButton={setShowNextButton}
+					/> : <p>Invalid question number</p>;
+			case 12:
+				return <SatisfactionQuestionPage
+					satisfaction={satisfaction}
+					setSatisfaction={setSatisfaction}
+					setShowNextButton={setShowNextButton}
+				/>;
+			case 13:
+				return <LastPage
+					age={age}
+					user={USER}
+					gender={gender}
+					experience={experience}
+					confidence={confidence}
+					satisfaction={satisfaction}
+					questionProvanencesRef={questionProvanencesRef}
+				/>
+			default:
+				return <p>Invalid page number!</p>
+		}
+	}, [
+		age,
+		error,
+		gender,
+		embedUrl,
+		experience,
+		confidence,
+		pageNumber,
+		satisfaction,
+		currentQuestion,
+		setCurrentQuestion,
+		setShowNextButton,
+		setSatisfaction,
+		setConfidence,
+		setExperience,
+		setGender,
+		setAge,
+	]);
 
 	// Power BI REST API call to get the embed URL of the report
 	const getembedUrl = React.useCallback(() => {
@@ -164,69 +239,6 @@ export function App() {
 		}
 	}, [authenticate]);
 
-	const pages: React.ReactNode = React.useMemo<React.ReactNode>(() => {
-		switch (page) {
-			case 0:
-				return <FirstPage setShowNextButton={setShowNextButton} />;
-			case 1:
-				return <BackgroundQuestionsPage
-					age={age}
-					gender={gender}
-					experience={experience}
-					confidence={confidence}
-					setAge={setAge}
-					setGender={setGender}
-					setExperience={setExperience}
-					setConfidence={setConfidence}
-					setShowNextButton={setShowNextButton}
-				/>;
-			case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9:
-				return <QuestionPage
-					evaluationQuestion={EVALUATION_QUESTIONS[questionCount]}
-					reportRef={reportRef}
-					accessTokenRef={accessTokenRef}
-					currentQuestionRef={currentQuestionRef}
-					embedUrl={embedUrl}
-					error={error}
-					setShowNextButton={setShowNextButton}
-				/>;
-			case 10:
-				return <SatisfactionQuestionPage
-					satisfaction={satisfaction}
-					setSatisfaction={setSatisfaction}
-					setShowNextButton={setShowNextButton}
-				/>;
-			case 11:
-				return <LastPage
-					questionProvanencesRef={questionProvanencesRef}
-					age={age}
-					gender={gender}
-					experience={experience}
-					confidence={confidence}
-					satisfaction={satisfaction}
-					user={USER}
-				/>
-			default:
-				return <p>Invalid page number!</p>
-		}
-	}, [
-		age,
-		page,
-		gender,
-		experience,
-		confidence,
-		satisfaction,
-		embedUrl,
-		error,
-		questionCount,
-		setAge,
-		setGender,
-		setConfidence,
-		setExperience,
-		setSatisfaction,
-		setShowNextButton
-	]);
-
 	return (
 		<div className="d-flex flex-column">
 			<div >
@@ -236,11 +248,13 @@ export function App() {
 			</div>
 			<div className="card m-1 overflow-auto" style={{ height: '88vh' }}>
 				<div className="card-body">
-					{pages}
+					{currentPage}
 				</div>
 			</div>
 			<div className="d-flex justify-content-between mx-1">
-				<p className="text-muted">{questionCount > 0 && questionCount < 9 ? `Question ${questionCount}/8` : null}</p>
+				<p className="text-muted">{
+					currentQuestion ? `Question ${questionNumberRef.current + 1}/${EVALUATION_QUESTIONS.length}` : null
+				}</p>
 				{showNextButton ?
 					<button
 						className="btn btn-primary"

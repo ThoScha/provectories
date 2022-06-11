@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { MailLink } from '../utils/MailLink';
 
 export function FirstPage({
 	setShowNextButton
@@ -8,8 +9,8 @@ export function FirstPage({
 	const [showMore, setShowMore] = React.useState<boolean>(false);
 	const [confirmed, setConfirmed] = React.useState<boolean>(false);
 
-	return <div className="me-2 ms-1">
-		<h2>Welcome to the suvery</h2>
+	return <div>
+		<h2>Data Protection</h2>
 		<b>
 			Why do we collect and process your data?
 		</b>
@@ -31,17 +32,17 @@ export function FirstPage({
 		<b>How can you contact us?</b>
 		<p>
 			The responsible party for the procesing of the data described below within the meaning of Art 4 No. 7 GDPR is
-			Johannes Kepler University Linz (JKU), Altenberger Straße 69, 4040 Linz, <a href="datenschutz@jku.at">datenschutz@jku.at</a>.
+			Johannes Kepler University Linz (JKU), Altenberger Straße 69, 4040 Linz, <MailLink mail={'datenschutz@jku.at'} />.
 			If you have any questions about the study, please contact Thomas-Johann Schachinger, Johannes Kepler University Linz,
-			Altenberger Straße 69, 4040 Linz, <a href="mailto:thomas.schachinger@icloud.com">thomas.schachinger@icloud.com</a> or{' '}
-			<a href="cg@jku.at">cg@jku.at</a>.
+			Altenberger Straße 69, 4040 Linz, <MailLink mail={'thomas.schachinger@icloud.com'} /> or{' '}
+			<MailLink mail={'cg@jku.at'} />.
 		</p>
 		<p>
 			If you would like more information about the processing of your personal data,{' '}
-			<button className=" btn btn-link pb-1 p-0" type="button" onClick={() => setShowMore(true)}>please click here</button>.
+			<button className=" btn btn-link pb-1 p-0 text-decoration-none" type="button" onClick={() => setShowMore(true)}>please click here</button>.
 		</p>
 
-		<div className="form-check my-4 ms-1">
+		<div className="form-check mt-4 mb-5 ms-1">
 			<input
 				className="form-check-input"
 				type="checkbox"
@@ -140,14 +141,14 @@ export function FirstPage({
 			<p>
 				In addition, data subjects may complain about what they consider to be unlawful data processing
 				to the Austrian Data Protection Authority, Barichgasse 40-42, 1030 Vienna, Tel.: + 43 1 52 152-0, e-mail:
-				<a href="dsb@dsb.gv.at">dsb@dsb.gv.at</a>.
+				<MailLink mail={'dsb@dsb.gv.at'} />.
 			</p>
 			<b>
 				Our data protection officer
 			</b>
 			<p>
 				The data protection officer within the meaning of Art 37 GDPR can be reached at Johannes Kepler University
-				Linz (JKU), Data Protection Unit, Altenberger Straße 69, 4040 Linz, <a href="datenschutz@jku.at">datenschutz@jku.at</a>.
+				Linz (JKU), Data Protection Unit, Altenberger Straße 69, 4040 Linz, <MailLink mail={'datenschutz@jku.at'} />.
 			</p>
 		</>}
 	</div>

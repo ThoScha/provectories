@@ -1,5 +1,6 @@
 import React from "react";
-import { IExportFeatureVectorRow, IQuestionProvenance } from "../utils/interfaces";
+import { IExportFeatureVectorRow, IProvenanceQuestion } from "../utils/interfaces";
+import { MailLink } from "../utils/MailLink";
 import { featureVectorizeGraph, featureVectorsToCsvString } from "../utils/utils";
 
 export function LastPage({
@@ -11,7 +12,7 @@ export function LastPage({
 	satisfaction,
 	user
 }: {
-	questionProvanencesRef: React.MutableRefObject<IQuestionProvenance[]>
+	questionProvanencesRef: React.MutableRefObject<IProvenanceQuestion[]>
 	age: number;
 	gender: string;
 	experience: string;
@@ -61,7 +62,7 @@ export function LastPage({
 
 	return <div>
 		<h2>Thank you for attending!</h2>
-		<h4>To save your provenance status please click following button to download it as csv-file</h4>
+		<h4>To save your answers please click following button to download it as csv-file:</h4>
 		<button
 			className="btn btn-secondary"
 			type="button"
@@ -85,7 +86,10 @@ export function LastPage({
 		</> : null}
 		{uploadClicked ? <>
 			<h3>Thank you!</h3>
-			<p>To logout just close this window</p>
+			<p>
+				If you have any questions or want further information about the topic
+				please just write a mail to: <MailLink mail={'thomas.schachinger@icloud.com'} />.</p>
+			<p>To logout just close this window.</p>
 		</> : null}
 	</div>
 }

@@ -20,23 +20,20 @@ export type IFeatureVector = {
 
 export type IExportFeatureVectorRow = (number | string | number[])[];
 
-interface IQuestion {
+export interface IEvaluationQuestion {
+  question: string;
+  answerPossibilities: { [key: number]: string | number };
   questionId: number;
   taskId: number;
   correctAnswerId: number;
 }
 
-export interface IEvaluationQuestion extends IQuestion {
-  question: string;
-  answerPossibilites: { [key: number]: string | number };
-}
-
-export interface ICurrentQuestion extends IQuestion {
+export interface ICurrentQuestion extends IEvaluationQuestion {
   answerId: number;
   mentalEffort: number;
 }
 
-export interface IQuestionProvenance extends ICurrentQuestion {
+export type IProvenanceQuestion = Pick<ICurrentQuestion, "questionId" | "taskId" | "answerId" | "correctAnswerId" | "mentalEffort"> & {
   provenance: Provenance<IAppState, string, void>
   endtime: number;
 }
