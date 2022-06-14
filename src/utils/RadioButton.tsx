@@ -1,17 +1,16 @@
 import * as React from "react";
 
-export function RadioButton<T>({ radioButtonId, title, selected, setSelected }: { radioButtonId: T, title: string, selected: T, setSelected: (selected: T) => void }) {
-	const htmlFor = title.replaceAll(' ', '') + '-' + radioButtonId;
+export function RadioButton<T>({ htmlFor, value, title, selected, setSelected }: { htmlFor: string, value: T, title: string, selected: T, setSelected: (selected: T) => void }) {
 	return <>
 		<input
 			type="radio"
 			className="btn-check"
-			onChange={() => setSelected(radioButtonId)}
-			name={htmlFor}
-			id={htmlFor}
+			onChange={() => setSelected(value)}
+			name={String(htmlFor)}
+			id={String(htmlFor)}
 			autoComplete="off"
-			checked={selected === radioButtonId}
+			checked={selected === value}
 		/>
-		<label className="btn btn-outline-secondary" htmlFor={htmlFor}>{title}</label>
+		<label className="btn btn-outline-secondary" htmlFor={String(htmlFor)}>{title}</label>
 	</>;
 }

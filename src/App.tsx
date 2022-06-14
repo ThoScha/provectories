@@ -21,7 +21,8 @@ export function App() {
 	const [error, setError] = React.useState<string[]>([]);
 	const [gender, setGender] = React.useState<string>('')
 	const [embedUrl, setEmbedUrl] = React.useState<string>('');
-	const [experience, setExperience] = React.useState<string>('');
+	const [dashboardExperience, setDashboardExperience] = React.useState<number>(-1);
+	const [powerBIExperience, setPowerBIExperience] = React.useState<number>(-1);
 	const [confidence, setConfidence] = React.useState<number>(-1);
 	const [pageNumber, setPageNumber] = React.useState<number>(1);
 	const [satisfaction, setSatisfaction] = React.useState<number>(-1);
@@ -53,7 +54,7 @@ export function App() {
 		if (
 			age > 0 &&
 			gender.length > 0 &&
-			experience.length > 0 &&
+			dashboardExperience > -1 &&
 			questionNumberRef.current < (EVALUATION_QUESTIONS.length - 1)
 		) {
 			questionNumberRef.current += 1;
@@ -78,10 +79,12 @@ export function App() {
 				return <BackgroundQuestionsPage
 					age={age}
 					gender={gender}
-					experience={experience}
+					dashboardExperience={dashboardExperience}
+					poweBIExperience={powerBIExperience}
 					confidence={confidence}
+					setPowerBIExperience={setPowerBIExperience}
 					setShowNextButton={setShowNextButton}
-					setExperience={setExperience}
+					setDashboardExperience={setDashboardExperience}
 					setConfidence={setConfidence}
 					setGender={setGender}
 					setAge={setAge}
@@ -108,7 +111,8 @@ export function App() {
 					age={age}
 					user={USER}
 					gender={gender}
-					experience={experience}
+					dashboardExperience={dashboardExperience}
+					powerBIExperience={powerBIExperience}
 					confidence={confidence}
 					satisfaction={satisfaction}
 					questionProvanencesRef={questionProvanencesRef}
@@ -121,16 +125,18 @@ export function App() {
 		error,
 		gender,
 		embedUrl,
-		experience,
+		dashboardExperience,
+		powerBIExperience,
 		confidence,
 		pageNumber,
 		satisfaction,
 		currentQuestion,
 		setCurrentQuestion,
 		setShowNextButton,
+		setPowerBIExperience,
 		setSatisfaction,
 		setConfidence,
-		setExperience,
+		setDashboardExperience,
 		setGender,
 		setAge,
 	]);

@@ -7,7 +7,8 @@ export function LastPage({
 	questionProvanencesRef,
 	age,
 	gender,
-	experience,
+	dashboardExperience,
+	powerBIExperience,
 	confidence,
 	satisfaction,
 	user
@@ -15,7 +16,8 @@ export function LastPage({
 	questionProvanencesRef: React.MutableRefObject<IProvenanceQuestion[]>
 	age: number;
 	gender: string;
-	experience: string;
+	dashboardExperience: number;
+	powerBIExperience: number;
 	confidence: number;
 	satisfaction: number;
 	user: string;
@@ -25,12 +27,13 @@ export function LastPage({
 
 	const getCsvString = (): string => {
 		const csvRows: IExportFeatureVectorRow[] = [];
-		questionProvanencesRef.current.sort((a, b) => a.questionId - b.questionId).forEach((y, i) => {
+		questionProvanencesRef.current.forEach((y, i) => {
 			const addCols = {
 				user,
 				age,
 				gender,
-				experience: experience === 'Yes' ? 1 : 0,
+				dashboardExperience,
+				powerBIExperience,
 				confidence,
 				satisfaction,
 				...Object.keys(y)
@@ -76,12 +79,12 @@ export function LastPage({
 		{downloaded ? <>
 			<h4>When downloaded please upload your created csv-file here:</h4>
 			<a
-				href="https://drive.google.com/drive/folders/1ZJAY7lLsvxNEv2QYFxpPi_8Pn7v4uv0n?usp=sharing"
+				href="https://cloud.se.jku.at/u/d/f5a9d8ee08a8449d8a41/"
 				target="_blank"
 				rel="noopener noreferrer"
 				onClick={() => setUploadClicked(true)}
 			>
-				https://drive.google.com/drive/folders/1ZJAY7lLsvxNEv2QYFxpPi_8Pn7v4uv0n?usp=sharing
+				https://cloud.se.jku.at/u/d/f5a9d8ee08a8449d8a41/
 			</a>
 		</> : null}
 		{uploadClicked ? <>
