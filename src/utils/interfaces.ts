@@ -7,6 +7,7 @@ export interface IVisState {
 export interface IAppState {
   [key: string]: {
     type: string;
+    categoryMapper: { [key: string]: string };
     selected: {
       [key: string]: string[];
     } | null;

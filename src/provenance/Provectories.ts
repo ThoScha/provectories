@@ -4,6 +4,7 @@ import { IAppState } from "../utils/interfaces";
 import { exportData, toCamelCaseString, getCurrentVisuals, makeDeepCopy, getVisualAttributeMapper } from "../utils/utils";
 import { Provenance } from "@visdesignlab/trrack";
 import 'powerbi-report-authoring';
+import { IExportDataResult } from "powerbi-models";
 
 export const provenance: Provenance<IAppState, string, void> = {} as Provenance<IAppState, string, void>;
 
@@ -48,7 +49,7 @@ class Provectories {
 
 			dataPoints.forEach((point: any) => {
 				point.identity.forEach((i: any) => {
-					selections[i.target.column] = [...(selections[i.target.column] ? selections[i.target.column] : []), String(i.equals)];
+					selections[i.target.column] = [...(selections[i.target.column] ? selections[i.target.column] : []), i.equals];
 				});
 			});
 
@@ -72,15 +73,23 @@ class Provectories {
 	 */
 	async setVisState(appState: IAppState): Promise<IAppState> {
 		const visuals = await getCurrentVisuals(this.report);
+		const exportedData: { [visualTitle: string]: IExportDataResult | null } = {};
+
+		// go through all async calls at the beginning so the exportData doesn't change
+		// because of another dashboard event
 		await Promise.all(visuals.map(async (v) => {
-			const result = await exportData(v);
-			const categoryMapper = await getVisualAttributeMapper(v);
+			exportedData[toCamelCaseString(v.title)] = await exportData(v);
+		}));
+
+		Object.keys(exportedData).forEach(async (key) => {
+			const result = exportedData[key];
 			if (!result) {
 				return;
 			}
 			// vectorize data string && remove last row (empty)
 			const data = result.data.replaceAll("\n", "").split('\r').map((d) => d.split(',')).slice(0, -1);
 			const groupedData: { [key: string]: any[] } = {};
+			const { visState, categoryMapper } = appState[key];
 
 			// group data columnwise
 			data[0].forEach((header, index) => {
@@ -96,20 +105,17 @@ class Provectories {
 					}
 					const cell = row[index];
 					const number = cell.match(/\d+/);
-					// only add as number, when cell is not from a category column or legend
-					const value = number && category === 'Y' ? parseInt(number[0]) : cell;
-					currSet.push(value);
+					currSet.push(number ? parseInt(number[0]) : cell);
 				});
 			});
 
-			const { visState } = appState[toCamelCaseString(v.title)];
 			// assign to visual state in right format
 			Object.keys(groupedData).forEach((key) => {
 				const currArr: string[] | number[] = Array.from(groupedData[key]);
-				visState[key] = typeof currArr[0] === 'number' ?
+				visState[key] = categoryMapper[key] === 'Y' ?
 					(currArr as number[]) : Array.from(new Set(currArr as string[]));
 			});
-		}));
+		});
 		return appState;
 	};
 
@@ -129,13 +135,14 @@ class Provectories {
 						if (!selected![filter.target.column]) {
 							selected![filter.target.column] = [];
 						}
-						selected![filter.target.column].push(...filter.values.map((vals: string | number) => String(vals)));
+						selected![filter.target.column].push(...filter.values.map((vals: string | number) => vals));
 					});
 				}
 			}
+			const categoryMapper = await getVisualAttributeMapper(v);
 			const title = toCamelCaseString(v.title);
 			if (this.appState && !this.appState[title]) {
-				this.appState[toCamelCaseString(title)] = { selected, type: v.type, visState: {} };
+				this.appState[toCamelCaseString(title)] = { selected, type: v.type, visState: {}, categoryMapper };
 			}
 		}));
 	};
@@ -156,10 +163,10 @@ class Provectories {
 			// otherwise the provenance would make no sense for this case
 			if (activePage === (await this.report.getActivePage()).name) {
 				const label = this.setVisSelected(event);
-				const appState = await this.setVisState(makeDeepCopy(this.appState));
 
 				// function call is done in provenance for better performance on the dashboard
 				const onDashboardClick = async () => {
+					const appState = await this.setVisState(makeDeepCopy(this.appState));
 					return { newState: appState, label };
 				};
 
