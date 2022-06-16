@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { MailLink } from '../utils/MailLink';
 
-export function FirstPage({
+export function DataProtectionPage({
 	setShowNextButton
 }: {
 	setShowNextButton: (showNextButton: boolean) => void;
@@ -15,9 +15,10 @@ export function FirstPage({
 			Why do we collect and process your data?
 		</b>
 		<p>
-			The study is a purely scientific study conducted by the LIT Robopsychology Lab and the Institute for
-			Computer Graphics at the Johannes Kepler University Linz. The data will be used primarily to
-			generate scientific insights. Any publication will be in anonymous form.
+			The study is a purely scientific study conducted by the Institute of Business Informatics - Software Engineering
+			and the Institute for Computer Graphics at the Johannes Kepler University Linz. In this survey no sensitive personal
+			data will be collected. The generated data will be used primarily to generate scientific insights. Any publication
+			of the data will be in fully anonymous form.
 		</p>
 		<p>
 			Participation in the study is entirely voluntary. You may withdraw your consent to participate at any
@@ -39,7 +40,13 @@ export function FirstPage({
 		</p>
 		<p>
 			If you would like more information about the processing of your personal data,{' '}
-			<button className=" btn btn-link pb-1 p-0 text-decoration-none" type="button" onClick={() => setShowMore(true)}>please click here</button>.
+			<button
+				className=" btn btn-link pb-1 p-0 text-decoration-none"
+				type="button"
+				onClick={() => setShowMore(true)}
+			>
+				please click here
+			</button>.
 		</p>
 
 		<div className="form-check mt-4 mb-5 ms-1">
@@ -59,27 +66,27 @@ export function FirstPage({
 			</label>
 		</div>
 		{!showMore ? null : <>
-			<b>
+			<h4>
 				Information on data processing
-			</b>
+			</h4>
 			<b>
 				How long will the personal data be processed?
 			</b>
 			<p>
-				The data collected as part of the study will be recorded and statistically analyzed by an
-				electronic data system. After completion of the study, all data will be stored and
-				archived according to the currently valid guidelines.
-				The fully anonymized data of this study can be made accessible as open data on the
-				Internet in a data archive no later than five years after completion of the study.
-				Thus, this study follows the recommendations of the German Research Foundation (DFG)
-				and the German Psychological Society (DGPs) for quality assurance in research.
+				The fully anonymized data collected as part of the study will be recorded and
+				statistically analyzed by an electronic data system. After completion of the study,
+				all data will be stored and archived according to the currently valid guidelines.
+				The data of this study can be made accessible as open data on the Internet in a
+				data archive no later than five years after completion of the study. Thus, this
+				study follows the recommendations of the German Research Foundation (DFG) and the
+				German Psychological Society (DGPs) for quality assurance in research.
 			</p>
 			<b>What personal data are collected and processed?</b>
 			<p>
-				Although information about you, including gender, age, and experience with visualization systems,
-				is requested, due to the anonymity of the survey, you are not identifiable by this information.
-				Directly personal or personally identifiable data that allows conclusions to be drawn about your
-				identity is not collected.
+				We will collect no personal data, except gender, age and experience that participants specify
+				themselves, and no data of computer devices. Due to the anonymity of the survey, you are not
+				identifiable by this information. Directly personal or personally identifiable data that allows
+				conclusions to be drawn about your identity is not collected.
 			</p>
 			<b>
 				What special categories of personal data are collected and processed?

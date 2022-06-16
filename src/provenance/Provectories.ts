@@ -48,7 +48,7 @@ class Provectories {
 
 			dataPoints.forEach((point: any) => {
 				point.identity.forEach((i: any) => {
-					selections[i.target.column] = [...(selections[i.target.column] ? selections[i.target.column] : []), i.equals];
+					selections[i.target.column] = [...(selections[i.target.column] ? selections[i.target.column] : []), String(i.equals)];
 				});
 			});
 
@@ -119,12 +119,25 @@ class Provectories {
 	*/
 	async initAppState() {
 		const visuals = await getCurrentVisuals(this.report);
-		visuals.forEach((v) => {
+		await Promise.all(visuals.map(async (v) => { // get initial slicer selection
+			let selected: null | { [key: string]: string[] } = null
+			if (v.type === 'slicer') {
+				const slicerState = await v.getSlicerState();
+				selected = {};
+				if (slicerState.filters.length > 0) {
+					slicerState.filters.forEach((filter: any) => {
+						if (!selected![filter.target.column]) {
+							selected![filter.target.column] = [];
+						}
+						selected![filter.target.column].push(...filter.values.map((vals: string | number) => String(vals)));
+					});
+				}
+			}
 			const title = toCamelCaseString(v.title);
 			if (this.appState && !this.appState[title]) {
-				this.appState[toCamelCaseString(title)] = { selected: null, type: v.type, visState: {} };
+				this.appState[toCamelCaseString(title)] = { selected, type: v.type, visState: {} };
 			}
-		});
+		}));
 	};
 
 	/**
@@ -143,10 +156,10 @@ class Provectories {
 			// otherwise the provenance would make no sense for this case
 			if (activePage === (await this.report.getActivePage()).name) {
 				const label = this.setVisSelected(event);
+				const appState = await this.setVisState(makeDeepCopy(this.appState));
 
 				// function call is done in provenance for better performance on the dashboard
 				const onDashboardClick = async () => {
-					const appState = await this.setVisState(makeDeepCopy(this.appState));
 					return { newState: appState, label };
 				};
 

@@ -22,18 +22,18 @@ export type IExportFeatureVectorRow = (number | string | number[])[];
 
 export interface IEvaluationQuestion {
   question: string;
-  answerPossibilities: { [key: number]: string | number };
+  answerPossibilities: { [title: string]: string[] };
   questionId: number;
   taskId: number;
-  correctAnswerId: number;
+  correctAnswer: string;
 }
 
 export interface ICurrentQuestion extends IEvaluationQuestion {
-  answerId: number;
+  selectedAnswer: string;
   mentalEffort: number;
 }
 
-export type IProvenanceQuestion = Pick<ICurrentQuestion, "questionId" | "taskId" | "answerId" | "correctAnswerId" | "mentalEffort"> & {
+export type IProvenanceQuestion = Pick<ICurrentQuestion, "questionId" | "taskId" | "selectedAnswer" | "correctAnswer" | "mentalEffort"> & {
   provenance: Provenance<IAppState, string, void>
   endtime: number;
 }

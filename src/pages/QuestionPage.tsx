@@ -22,21 +22,23 @@ export function QuestionPage({
 	setShowNextButton: (showNextButton: boolean) => void;
 }) {
 	const [reportLoaded, setReportLoaded] = React.useState<boolean>(false);
-	const [readyToAnswer, setReadyToAnswer] = React.useState<boolean>(false);
-	const [isSure, setIsSure] = React.useState<boolean>(false);
+	const [selectedAnswers, setSelectedAnswers] = React.useState<string[]>([]);
 
 	React.useEffect(() => {
-		setReportLoaded(false)
+		setReportLoaded(false);
+		setSelectedAnswers([...Object.keys(currentQuestion.answerPossibilities).map(() => "")]);
 		reportRef.current?.on("rendered", () => {
 			setReportLoaded(true);
-			setReadyToAnswer(false);
-			setIsSure(false);
 			reportRef.current?.off("rendered");
 		})
-	}, [currentQuestion.questionId, reportRef]);
+	}, [currentQuestion.questionId, currentQuestion.answerPossibilities, reportRef]);
+
+	React.useEffect(() => {
+		setCurrentQuestion((prev) => ({ ...prev as ICurrentQuestion, selectedAnswer: selectedAnswers.join(" ") }))
+	}, [selectedAnswers, setCurrentQuestion]);
 
 	return <div className="ms-2">
-		<div className="my-3" style={isSure ? { pointerEvents: 'none' } : {}}>
+		<div className="my-3">
 			<ProvectoriesDashboard
 				reportRef={reportRef}
 				accessTokenRef={accessTokenRef}
@@ -50,35 +52,66 @@ export function QuestionPage({
 				<div className="col-6 d-flex align-items-center">
 					<h5>{currentQuestion.question}</h5>
 				</div>
-				<div className="col-6 d-flex justify-content-center">
-					{reportLoaded ? (
-						isSure ? (
-							<div className="btn-group w-100" role="group" aria-label="evaluation-answer-radio-button-group">
-								{Object.keys(currentQuestion.answerPossibilities)
-									.map((key) => <RadioButton<number>
-										htmlFor={`evaluation-answer-${currentQuestion.questionId}-${key}`}
-										value={Number(key)}
-										title={currentQuestion.answerPossibilities[key].toString()}
-										selected={currentQuestion.answerId}
-										setSelected={(answerId: number) => setCurrentQuestion((prev) => ({ ...prev as ICurrentQuestion, answerId }))}
+				<div className="col-6 d-flex justify-content-center align-items-center">
+					{reportLoaded && selectedAnswers.length > 0 ? <>
+						{Object.keys(currentQuestion.answerPossibilities).map((key, i) =>
+							<React.Fragment key={`${currentQuestion.questionId}-${key}`}>{
+								key === 'numeric' ? <>
+									<h5 className='form-label my-0 mx-2 text-capitalize'>
+										Answer:
+									</h5>
+									<input
+										value={selectedAnswers[i]}
+										onChange={(e) => {
+											const newVal = e.target.value;
+											setSelectedAnswers((prevState) =>
+												[...prevState.map((p, j) => j === i ? newVal : p)]
+											);
+										}}
+										type="text"
+										className="form-control"
+										aria-label={`${currentQuestion.questionId}-${key}-input`}
 									/>
-									)}
-							</div>) : readyToAnswer ? <div className="d-flex align-items-center">
-								<p className="m-0 text-muted">Are you sure? Accepting will disable the dashboard.</p>
-								<button className="btn btn-secondary ms-4" onClick={() => setIsSure(true)}>Answer now</button>
-								<button className="btn btn-text-secondary" onClick={() => setReadyToAnswer(false)}>Abort</button>
-							</div> : <button type="button" className="btn btn-secondary" onClick={() => setReadyToAnswer(true)}>Ready to answer?</button>
-					) : null}
+								</> : <>
+									<h5 className='form-label my-0 mx-2 text-capitalize'>
+										{key}:
+									</h5>
+									<select
+										className="form-select"
+										value={selectedAnswers[i] || ''}
+										onChange={(e) => {
+											const newVal = e.target.value;
+											setSelectedAnswers((prevState) =>
+												[...prevState.map((p, j) => j === i ? newVal : p)]
+											);
+										}}
+										aria-label={`${currentQuestion.questionId}-${key}-select`}
+									>
+										<option disabled value=""></option>
+										{currentQuestion.answerPossibilities[key].map((answer) =>
+											<option
+												key={`${currentQuestion.questionId}-${answer}`}
+												value={answer}
+											>
+												{answer}
+											</option>
+										)}
+									</select>
+								</>
+							}</React.Fragment>
+						)}
+					</> : null}
 				</div>
 			</div>
-			{currentQuestion.answerId !== -1 ? <div className="mt-3 row">
+			{selectedAnswers.every((a) => a.length > 0) ? <div className="mt-4 row">
 				<div className="col-6 d-flex align-items-center">
-					<h5>Weight the complexity of the task:</h5>
+					<h5>Rate the complexity of the task:</h5>
 				</div>
 				<div className="col-6">
 					<div className="btn-group w-100" role="group" aria-label="mental-effort-radio-button-group">
 						{[{ value: 1, title: 'very easy' }, { value: 2, title: 'easy' }, { value: 3, title: 'not so easy' }]
 							.map((val) => <RadioButton<number>
+								key={`mental-effort-radio-button-${val.title}`}
 								htmlFor={`mental-effort-radio-button-${val.title}`}
 								value={val.value}
 								title={val.title}

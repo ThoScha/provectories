@@ -1,7 +1,7 @@
 import React from "react";
 import { RadioButton } from "../utils/RadioButton";
 
-export function SatisfactionQuestionPage({
+export function UsabilityEvaluationPage({
 	satisfaction,
 	setSatisfaction,
 	setShowNextButton
@@ -27,6 +27,7 @@ export function SatisfactionQuestionPage({
 				<div className="btn-group w-100" role="group" aria-label="satisfaction-radio-button-group">
 					{[1, 2, 3, 4, 5, 6]
 						.map((num) => <RadioButton<number>
+							key={`satisfaction-radio-button-${num}`}
 							htmlFor={`satisfaction-radio-button-${num}`}
 							value={num}
 							title={String(num)}
@@ -36,7 +37,7 @@ export function SatisfactionQuestionPage({
 					}
 				</div>
 				<div className="d-flex justify-content-between text-muted">
-					<i>1 - very low satisfaction</i><i>6 - very high satisfaction</i>
+					<i>1 - very low usability</i><i>6 - very high usability</i>
 				</div>
 			</div>
 		</div>

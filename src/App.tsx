@@ -2,17 +2,18 @@ import * as React from "react";
 import { UserAgentApplication, AuthError, AuthResponse } from "msal";
 import { v4 as uuid } from 'uuid';
 import * as config from "./power-bi/Config";
-import { BackgroundQuestionsPage } from "./pages/BackgroundQuestionsPage";
-import { FirstPage } from "./pages/DSGVOPage";
-import { LastPage } from "./pages/LastPage";
+import { DemographicsPage } from "./pages/DemographicsPage";
+import { DataProtectionPage } from "./pages/DataProtectionPage";
+import { UploadPage } from "./pages/UploadPage";
 import { QuestionPage } from "./pages/QuestionPage";
-import { SatisfactionQuestionPage } from "./pages/SatisfactionQuestionPage";
+import { UsabilityEvaluationPage } from "./pages/UsabilityEvaluationPage";
 import { EVALUATION_QUESTIONS } from "./utils/constants";
 import { Report } from "powerbi-client";
 import { provenance } from "./provenance/Provectories";
 import { ICurrentQuestion, IProvenanceQuestion } from "./utils/interfaces";
 import _ from "lodash";
 import { WelcomePage } from "./pages/WelcomePage";
+import { OnboardingPage } from "./pages/OnboardingPage";
 
 const USER: string = uuid();
 
@@ -21,18 +22,20 @@ export function App() {
 	const [error, setError] = React.useState<string[]>([]);
 	const [gender, setGender] = React.useState<string>('')
 	const [embedUrl, setEmbedUrl] = React.useState<string>('');
-	const [dashboardExperience, setDashboardExperience] = React.useState<number>(-1);
-	const [powerBIExperience, setPowerBIExperience] = React.useState<number>(-1);
 	const [confidence, setConfidence] = React.useState<number>(-1);
 	const [pageNumber, setPageNumber] = React.useState<number>(1);
 	const [satisfaction, setSatisfaction] = React.useState<number>(-1);
 	const [showNextButton, setShowNextButton] = React.useState<boolean>(false);
 	const [currentQuestion, setCurrentQuestion] = React.useState<ICurrentQuestion | null>(null);
 	const [disableNextButton, setDisableNExtButton] = React.useState<boolean>(false);
+	const [powerBIExperience, setPowerBIExperience] = React.useState<number>(-1);
+	const [dashboardExperience, setDashboardExperience] = React.useState<number>(-1);
 	const questionProvanencesRef = React.useRef<IProvenanceQuestion[]>([]);
-	const questionNumberRef = React.useRef<number>(-1);
 	const accessTokenRef = React.useRef<string>('');
 	const reportRef = React.useRef<Report>();
+
+	// adjust when adding page before question pages
+	const questionNumber = pageNumber - 4;
 
 	const onNextPageButtonClick = async () => {
 		setDisableNExtButton(true);
@@ -52,17 +55,13 @@ export function App() {
 		}
 		// check for values before the question pages and if there is a next question
 		if (
-			age > 0 &&
-			gender.length > 0 &&
-			dashboardExperience > -1 &&
-			questionNumberRef.current < (EVALUATION_QUESTIONS.length - 1)
+			questionNumber > -1 &&
+			questionNumber < (EVALUATION_QUESTIONS.length)
 		) {
-			questionNumberRef.current += 1;
-			setCurrentQuestion({ ...EVALUATION_QUESTIONS[questionNumberRef.current], mentalEffort: -1, answerId: -1 });
+			setCurrentQuestion({ ...EVALUATION_QUESTIONS[questionNumber], mentalEffort: -1, selectedAnswer: "" });
 		} else { // no next question
 			setCurrentQuestion(null);
 		}
-
 		setDisableNExtButton(false);
 		setShowNextButton(false);
 		setPageNumber((prevState) => prevState + 1);
@@ -74,22 +73,25 @@ export function App() {
 				setShowNextButton(true);
 				return <WelcomePage />
 			case 2:
-				return <FirstPage setShowNextButton={setShowNextButton} />;
+				return <DataProtectionPage setShowNextButton={setShowNextButton} />;
 			case 3:
-				return <BackgroundQuestionsPage
+				return <DemographicsPage
 					age={age}
 					gender={gender}
-					dashboardExperience={dashboardExperience}
-					poweBIExperience={powerBIExperience}
 					confidence={confidence}
+					poweBIExperience={powerBIExperience}
+					dashboardExperience={dashboardExperience}
+					setDashboardExperience={setDashboardExperience}
 					setPowerBIExperience={setPowerBIExperience}
 					setShowNextButton={setShowNextButton}
-					setDashboardExperience={setDashboardExperience}
 					setConfidence={setConfidence}
 					setGender={setGender}
 					setAge={setAge}
 				/>;
-			case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11:
+			case 4:
+				setShowNextButton(true);
+				return <OnboardingPage />
+			case 5: case 6: case 7: case 8: case 9: case 10: case 11: case 12:
 				return currentQuestion ?
 					<QuestionPage
 						error={error}
@@ -100,21 +102,21 @@ export function App() {
 						setCurrentQuestion={setCurrentQuestion}
 						setShowNextButton={setShowNextButton}
 					/> : <p>Invalid question number</p>;
-			case 12:
-				return <SatisfactionQuestionPage
+			case 13:
+				return <UsabilityEvaluationPage
 					satisfaction={satisfaction}
 					setSatisfaction={setSatisfaction}
 					setShowNextButton={setShowNextButton}
 				/>;
-			case 13:
-				return <LastPage
+			case 14:
+				return <UploadPage
 					age={age}
 					user={USER}
 					gender={gender}
-					dashboardExperience={dashboardExperience}
-					powerBIExperience={powerBIExperience}
 					confidence={confidence}
 					satisfaction={satisfaction}
+					powerBIExperience={powerBIExperience}
+					dashboardExperience={dashboardExperience}
 					questionProvanencesRef={questionProvanencesRef}
 				/>
 			default:
@@ -125,18 +127,18 @@ export function App() {
 		error,
 		gender,
 		embedUrl,
-		dashboardExperience,
-		powerBIExperience,
 		confidence,
 		pageNumber,
 		satisfaction,
 		currentQuestion,
+		powerBIExperience,
+		dashboardExperience,
+		setDashboardExperience,
+		setPowerBIExperience,
 		setCurrentQuestion,
 		setShowNextButton,
-		setPowerBIExperience,
 		setSatisfaction,
 		setConfidence,
-		setDashboardExperience,
 		setGender,
 		setAge,
 	]);
@@ -259,7 +261,7 @@ export function App() {
 			</div>
 			<div className="d-flex justify-content-between mx-1">
 				<p className="text-muted">{
-					currentQuestion ? `Question ${questionNumberRef.current + 1}/${EVALUATION_QUESTIONS.length}` : null
+					currentQuestion ? `Question ${questionNumber}/${EVALUATION_QUESTIONS.length}` : null
 				}</p>
 				{showNextButton ?
 					<button

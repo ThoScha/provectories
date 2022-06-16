@@ -1,7 +1,7 @@
 import React from "react";
 import { RadioButton } from "../utils/RadioButton";
 
-export function BackgroundQuestionsPage({
+export function DemographicsPage({
 	age,
 	gender,
 	dashboardExperience,
@@ -60,6 +60,7 @@ export function BackgroundQuestionsPage({
 				<div className="btn-group w-100" role="group" aria-label="gender-radio-button-group">
 					{(['m', 'f', 'd'])
 						.map((gen) => <RadioButton<string>
+							key={`gender-radio-button-${gen}`}
 							htmlFor={`gender-radio-button-${gen}`}
 							value={gen}
 							title={gen}
@@ -76,6 +77,7 @@ export function BackgroundQuestionsPage({
 				<div className="btn-group w-100" role="group" aria-label="dashboard-experience-radio-button-group">
 					{[{ label: 'Yes', value: 1 }, { label: 'No', value: 0 }]
 						.map((val) => <RadioButton<number>
+							key={`dashboard-experience-radio-button-${val.label}`}
 							htmlFor={`dashboard-experience-radio-button-${val.label}`}
 							value={val.value}
 							title={val.label}
@@ -93,6 +95,7 @@ export function BackgroundQuestionsPage({
 					<div className="btn-group w-100" role="group" aria-label="powerBi-experience-radio-button-group">
 						{[{ label: 'Yes', value: 1 }, { label: 'No', value: 0 }]
 							.map((val) => <RadioButton<number>
+								key={`powerBi-experience-radio-button-${val.label}`}
 								htmlFor={`powerBi-experience-radio-button-${val.label}`}
 								value={val.value}
 								title={val.label}
@@ -109,6 +112,7 @@ export function BackgroundQuestionsPage({
 					<div className="btn-group w-100" role="group" aria-label="confidence-radio-button-group">
 						{[1, 2, 3, 4, 5, 6]
 							.map((num) => <RadioButton<number>
+								key={`confidence-radio-button-${num}`}
 								htmlFor={`confidence-radio-button-${num}`}
 								value={num}
 								title={String(num)}

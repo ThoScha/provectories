@@ -3,7 +3,7 @@ import { IExportFeatureVectorRow, IProvenanceQuestion } from "../utils/interface
 import { MailLink } from "../utils/MailLink";
 import { featureVectorizeGraph, featureVectorsToCsvString } from "../utils/utils";
 
-export function LastPage({
+export function UploadPage({
 	questionProvanencesRef,
 	age,
 	gender,
