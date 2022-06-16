@@ -49,7 +49,7 @@ class Provectories {
 
 			dataPoints.forEach((point: any) => {
 				point.identity.forEach((i: any) => {
-					selections[i.target.column] = [...(selections[i.target.column] ? selections[i.target.column] : []), i.equals];
+					selections[i.target.column] = [...(selections[i.target.column] ? selections[i.target.column] : []), String(i.equals)];
 				});
 			});
 
@@ -105,14 +105,16 @@ class Provectories {
 					}
 					const cell = row[index];
 					const number = cell.match(/\d+/);
-					currSet.push(number ? parseInt(number[0]) : cell);
+					// only add as number, when cell is not from a category column or legend
+					const value = number && category === 'Y' ? parseInt(number[0]) : cell;
+					currSet.push(value);
 				});
 			});
 
 			// assign to visual state in right format
 			Object.keys(groupedData).forEach((key) => {
 				const currArr: string[] | number[] = Array.from(groupedData[key]);
-				visState[key] = categoryMapper[key] === 'Y' ?
+				visState[key] = typeof currArr[0] === 'number' ?
 					(currArr as number[]) : Array.from(new Set(currArr as string[]));
 			});
 		});
@@ -135,7 +137,7 @@ class Provectories {
 						if (!selected![filter.target.column]) {
 							selected![filter.target.column] = [];
 						}
-						selected![filter.target.column].push(...filter.values.map((vals: string | number) => vals));
+						selected![filter.target.column].push(...filter.values.map((vals: string | number) => String(vals)));
 					});
 				}
 			}

@@ -138,14 +138,13 @@ export function appStateToFeatureVector(currState: IAppState, rootState: IAppSta
 	Object.keys(rootState).forEach((vKey) => {
 		const { visState, selected, type } = currState[vKey];
 		const rootVisState = rootState[vKey].visState;
-		const categoryMapper = rootState[vKey].categoryMapper;
 		Object.keys(rootVisState).forEach((aKey) => {
 			const rootAttribute = rootVisState[aKey];
 			const currAttribute = visState[aKey];
 			let columnTitle = vKey + '.' + aKey;
 			const vector = [] as number[];
 			// number arrays will be used as they are
-			if (categoryMapper[aKey] === 'Y') {
+			if (typeof rootAttribute[0] === 'number') {
 				columnTitle += "<numerical>";
 				vector.push(...(currAttribute.length > 0 ? currAttribute as number[] : [0]));
 			} else { // string arrays will be encoded
