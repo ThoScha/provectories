@@ -26,7 +26,9 @@ export function UploadPage({
 	const [uploadClicked, setUploadClicked] = React.useState<boolean>(false);
 
 	const getCsvString = (): string => {
-		const csvRows: IExportFeatureVectorRow[] = [];
+		// group vectors from each provenance first to cols to avoid different order
+		// between cols of different provenances
+		const csvCols: { [key: string]: any[] } = {};
 		questionProvanencesRef.current.forEach((y, i) => {
 			const addCols = {
 				user,
@@ -41,11 +43,27 @@ export function UploadPage({
 					.reduce((obj, key) => ({ ...obj, [key]: y[key] }), {})
 			};
 			let vectors: IExportFeatureVectorRow[] = featureVectorizeGraph(y.provenance, addCols);
-			if (i > 0) {
-				vectors = vectors.slice(1);
+
+			if (Object.keys(csvCols).length === 0) {
+				(vectors[0] as string[]).forEach((key) => {
+					csvCols[key] = [];
+				});
 			}
-			csvRows.push(...vectors);
+
+			(vectors[0] as string[]).forEach((key: string, j: number) => {
+				vectors.slice(1).forEach((value, i) => {
+					csvCols[key].push(value[j]);
+				});
+			});
 		});
+		const csvRows: IExportFeatureVectorRow[] = [];
+		const keys = Object.keys(csvCols);
+
+		csvRows.push(keys);
+		csvCols[keys[0]].forEach((val, i) => {
+			csvRows.push(keys.map((key) => csvCols[key][i]));
+		});
+
 		return featureVectorsToCsvString(csvRows);
 	}
 
