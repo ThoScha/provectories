@@ -31,7 +31,7 @@ export function OnboardingPage() {
             <ul className="ms-4">
                 <li>Selecting by clicking on elements (data points and legends) in the visualization (elements 3 - 6)</li>
                 <li>Applying filters by clicking on the filters (elements 7 - 9)</li>
-                <li>Ctrl + Click allows multi-selecting for visualization elements and filters (elements 3 - 9)</li>
+                <li>Ctrl + Click (Cmd + Click for macOS) allows multi-selecting for visualization elements and filters (elements 3 - 9)</li>
                 <li>Visualizations also allow drag-selection for selecting multiple data points at once (elements 3 - 6)</li>
             </ul>
         </div>

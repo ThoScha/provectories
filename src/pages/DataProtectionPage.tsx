@@ -147,7 +147,7 @@ export function DataProtectionPage({
 			</b>
 			<p>
 				In addition, data subjects may complain about what they consider to be unlawful data processing
-				to the Austrian Data Protection Authority, Barichgasse 40-42, 1030 Vienna, Tel.: + 43 1 52 152-0, e-mail:
+				to the Austrian Data Protection Authority, Barichgasse 40-42, 1030 Vienna, Tel.: + 43 1 52 152-0, e-mail:{' '}
 				<MailLink mail={'dsb@dsb.gv.at'} />.
 			</p>
 			<b>

@@ -2,7 +2,7 @@ import * as React from "react";
 
 export function WelcomePage() {
 	return <div>
-		<h2>Welcome to the survery of Provectories</h2>
+		<h2>Welcome to the survey of Provectories</h2>
 		<h4>Provectories</h4>
 		<p>
 			Provectories is an approach for applying a provenance meta-analysis by visualizing a set of interaction provenance.
