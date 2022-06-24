@@ -7,7 +7,7 @@ import { WelcomeView } from "./survey/WelcomeView";
 export function App() {
     const [suveryView, setSurveyView] = React.useState<boolean>(false);
 
-    return <div className="m-3">
+    return <div>
         {//Go to survey view if no login login is triggered if already logged in redirect
             suveryView || new UserAgentApplication({ auth: { clientId: config.clientId } }).getAccount() ?
                 <Survey />

@@ -1,7 +1,7 @@
 import React from "react";
 
 export function WelcomeView({ setSurveyView }: { setSurveyView: (surveView: boolean) => void }) {
-    return <div>
+    return <div className="m-3">
         <h2>Welcome to the survey of Provectories</h2>
         <h4>Provectories</h4>
         <p>
