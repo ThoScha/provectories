@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { MailLink } from '../utils/MailLink';
+import { MailLink } from '../../utils/MailLink';
 
 export function DataProtectionPage({
 	setShowNextButton

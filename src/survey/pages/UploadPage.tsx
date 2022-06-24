@@ -1,7 +1,7 @@
 import React from "react";
-import { IExportFeatureVectorRow, IProvenanceQuestion } from "../utils/interfaces";
-import { MailLink } from "../utils/MailLink";
-import { featureVectorizeGraph, featureVectorsToCsvString } from "../utils/utils";
+import { IExportFeatureVectorRow, IProvenanceQuestion } from "../../utils/interfaces";
+import { MailLink } from "../../utils/MailLink";
+import { featureVectorizeGraph, featureVectorsToCsvString } from "../../utils/utils";
 
 export function UploadPage({
 	questionProvanencesRef,

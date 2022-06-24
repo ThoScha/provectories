@@ -1,5 +1,5 @@
 import React from "react";
-import Onboarding from "../utils/NewHiresDashboardOnboarding.png"
+import Onboarding from "../../utils/NewHiresDashboardOnboarding.png"
 
 
 export function OnboardingPage() {

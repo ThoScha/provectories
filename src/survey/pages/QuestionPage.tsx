@@ -1,8 +1,8 @@
 import { Report } from 'powerbi-client';
 import * as React from 'react';
-import { ProvectoriesDashboard } from '../power-bi/ProvectoriesDashboard';
-import { ICurrentQuestion } from '../utils/interfaces';
-import { RadioButton } from '../utils/RadioButton';
+import { ProvectoriesDashboard } from '../../power-bi/ProvectoriesDashboard';
+import { ICurrentQuestion } from '../../utils/interfaces';
+import { RadioButton } from '../../utils/RadioButton';
 
 export function QuestionPage({
 	reportRef,

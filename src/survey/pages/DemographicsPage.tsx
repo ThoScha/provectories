@@ -1,5 +1,5 @@
 import React from "react";
-import { RadioButton } from "../utils/RadioButton";
+import { RadioButton } from "../../utils/RadioButton";
 
 export function DemographicsPage({
 	age,

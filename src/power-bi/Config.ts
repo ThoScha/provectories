@@ -11,7 +11,7 @@
 export const scopes: string[] = ["https://analysis.windows.net/powerbi/api/Report.Read.All"];
 
 // Client Id (Application Id) of the AAD app.
-export const clientId: string = "f1f98e67-aeb3-406c-a3f6-8c90654a8562";
+export const clientId: string = "09a6221d-50da-49bf-bbf5-6d99cdbb891e";
 
 // Id of the workspace where the report is hosted
 export const workspaceId: string = "0223b04f-f0a4-43c6-9dbe-e152236e6a5a";
