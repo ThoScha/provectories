@@ -19,8 +19,8 @@ export function WelcomeView({ setSurveyView }: { setSurveyView: (surveView: bool
         <h4>How to start</h4>
         <ol>
             <li>When you start you will get asked to login with an email address and a password.</li>
-            <li><b>Please use the provided user credentials for the login.</b></li>
-            <li>Click on the button below to start.</li>
+            <li><b>Please use the below provided user credentials for the login.</b></li>
+            <li>Click on the "Start survey"-button to begin.</li>
         </ol>
         <div className="card mt-4" style={{ width: 320 }}>
             <div className="card-body">
