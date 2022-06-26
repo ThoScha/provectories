@@ -19,6 +19,15 @@ export function WelcomeView({ setSurveyView }: { setSurveyView: (surveView: bool
         <h4>How to start</h4>
         <ol>
             <li>When you start you will get asked to login with an email address and a password.</li>
+            <li>
+                To provide anonymity and to grant you access to the dashboard <b>you need to
+                    login with our survey user.</b>
+            </li>
+            <li>
+                It could be that you are suggested your own Microsoft user.
+                In this case, you might open the survey in an anoymous browser window to
+                keep the login process short.
+            </li>
             <li><b>Please use the below provided user credentials for the login.</b></li>
             <li>Click on the "Start survey"-button to begin.</li>
         </ol>
