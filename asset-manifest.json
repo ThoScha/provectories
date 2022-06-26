@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.js": "/provectories/static/js/main.c4b613de.chunk.js",
+    "main.js.map": "/provectories/static/js/main.c4b613de.chunk.js.map",
+    "runtime-main.js": "/provectories/static/js/runtime-main.2395289c.js",
+    "runtime-main.js.map": "/provectories/static/js/runtime-main.2395289c.js.map",
+    "static/css/2.b44db842.chunk.css": "/provectories/static/css/2.b44db842.chunk.css",
+    "static/js/2.41a3274b.chunk.js": "/provectories/static/js/2.41a3274b.chunk.js",
+    "static/js/2.41a3274b.chunk.js.map": "/provectories/static/js/2.41a3274b.chunk.js.map",
+    "index.html": "/provectories/index.html",
+    "precache-manifest.3ddf564f509c61e14a6f0d7082224d3a.js": "/provectories/precache-manifest.3ddf564f509c61e14a6f0d7082224d3a.js",
+    "service-worker.js": "/provectories/service-worker.js",
+    "static/css/2.b44db842.chunk.css.map": "/provectories/static/css/2.b44db842.chunk.css.map",
+    "static/js/2.41a3274b.chunk.js.LICENSE.txt": "/provectories/static/js/2.41a3274b.chunk.js.LICENSE.txt",
+    "static/media/NewHiresDashboardOnboarding.png": "/provectories/static/media/NewHiresDashboardOnboarding.49a240a8.png",
+    "static/media/semantic.min.css": "/provectories/static/media/outline-icons.ef60a4f6.woff"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.2395289c.js",
+    "static/css/2.b44db842.chunk.css",
+    "static/js/2.41a3274b.chunk.js",
+    "static/js/main.c4b613de.chunk.js"
+  ]
+}

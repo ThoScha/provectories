@@ -1,0 +1,224 @@
+/*
+object-assign
+(c) Sindre Sorhus
+@license MIT
+*/
+
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+
+/*! ./FilterBuilders */
+
+/*! ./advancedFilterBuilder */
+
+/*! ./basicFilterBuilder */
+
+/*! ./bookmarksManager */
+
+/*! ./config */
+
+/*! ./create */
+
+/*! ./dashboard */
+
+/*! ./embed */
+
+/*! ./errors */
+
+/*! ./factories */
+
+/*! ./filterBuilder */
+
+/*! ./page */
+
+/*! ./qna */
+
+/*! ./relativeDateFilterBuilder */
+
+/*! ./relativeTimeFilterBuilder */
+
+/*! ./report */
+
+/*! ./service */
+
+/*! ./tile */
+
+/*! ./topNFilterBuilder */
+
+/*! ./util */
+
+/*! ./visual */
+
+/*! ./visualDescriptor */
+
+/*! http-post-message */
+
+/*! http-post-message v0.2.3 | (c) 2016 Microsoft Corporation MIT */
+
+/*! no static exports found */
+
+/*! powerbi-models */
+
+/*! powerbi-router */
+
+/*! powerbi-router v0.1.5 | (c) 2016 Microsoft Corporation MIT */
+
+/*! window-post-message-proxy */
+
+/*! window-post-message-proxy v0.2.6 | (c) 2016 Microsoft Corporation MIT */
+
+/*!********************!*\
+        !*** ./src/qna.ts ***!
+        \********************/
+
+/*!*********************!*\
+        !*** ./src/page.ts ***!
+        \*********************/
+
+/*!*********************!*\
+        !*** ./src/tile.ts ***!
+        \*********************/
+
+/*!*********************!*\
+        !*** ./src/util.ts ***!
+        \*********************/
+
+/*!**********************!*\
+        !*** ./src/embed.ts ***!
+        \**********************/
+
+/*!***********************!*\
+        !*** ./src/config.ts ***!
+        \***********************/
+
+/*!***********************!*\
+        !*** ./src/create.ts ***!
+        \***********************/
+
+/*!***********************!*\
+        !*** ./src/errors.ts ***!
+        \***********************/
+
+/*!***********************!*\
+        !*** ./src/report.ts ***!
+        \***********************/
+
+/*!***********************!*\
+        !*** ./src/visual.ts ***!
+        \***********************/
+
+/*!************************!*\
+        !*** ./src/service.ts ***!
+        \************************/
+
+/*!**************************!*\
+        !*** ./src/dashboard.ts ***!
+        \**************************/
+
+/*!**************************!*\
+        !*** ./src/factories.ts ***!
+        \**************************/
+
+/*!*******************************!*\
+        !*** ./src/powerbi-client.ts ***!
+        \*******************************/
+
+/*!*********************************!*\
+        !*** ./src/bookmarksManager.ts ***!
+        \*********************************/
+
+/*!*********************************!*\
+        !*** ./src/visualDescriptor.ts ***!
+        \*********************************/
+
+/*!*************************************!*\
+        !*** ./src/FilterBuilders/index.ts ***!
+        \*************************************/
+
+/*!*********************************************!*\
+        !*** ./src/FilterBuilders/filterBuilder.ts ***!
+        \*********************************************/
+
+/*!*************************************************!*\
+        !*** ./src/FilterBuilders/topNFilterBuilder.ts ***!
+        \*************************************************/
+
+/*!**************************************************!*\
+        !*** ./src/FilterBuilders/basicFilterBuilder.ts ***!
+        \**************************************************/
+
+/*!****************************************************!*\
+        !*** ./node_modules/powerbi-models/dist/models.js ***!
+        \****************************************************/
+
+/*!****************************************************!*\
+        !*** ./node_modules/powerbi-router/dist/router.js ***!
+        \****************************************************/
+
+/*!*****************************************************!*\
+        !*** ./src/FilterBuilders/advancedFilterBuilder.ts ***!
+        \*****************************************************/
+
+/*!*********************************************************!*\
+        !*** ./src/FilterBuilders/relativeDateFilterBuilder.ts ***!
+        \*********************************************************/
+
+/*!*********************************************************!*\
+        !*** ./src/FilterBuilders/relativeTimeFilterBuilder.ts ***!
+        \*********************************************************/
+
+/*!****************************************************************!*\
+        !*** ./node_modules/http-post-message/dist/httpPostMessage.js ***!
+        \****************************************************************/
+
+/*!*******************************************************************************!*\
+        !*** ./node_modules/window-post-message-proxy/dist/windowPostMessageProxy.js ***!
+        \*******************************************************************************/
+
+/**
+ * @license
+ * Lodash <https://lodash.com/>
+ * Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
+ * Released under MIT license <https://lodash.com/license>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ */
+
+/** @license React v0.19.1
+ * scheduler.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/** @license React v16.14.0
+ * react-dom.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/** @license React v16.14.0
+ * react.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
